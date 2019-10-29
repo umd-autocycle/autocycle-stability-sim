@@ -24,8 +24,8 @@ dy = np.array([y0.diff(t), y1.diff(t)])
 d2y = np.array([y0.diff(t,2), y1.diff(t,2)])
 
 diffeq = M*d2y+C*dy+K*y
-#print(Eq(diffeq[0][0], 0))
-
+print(Eq(diffeq[0][0], 0))
+print(Eq(diffeq[1][0], 0))
 print(dsolve([Eq(diffeq[0][0], 0), Eq(diffeq[1][0], 0)],y))
 
 '''
