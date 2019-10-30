@@ -2,17 +2,17 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 
+
 def plot_params(title, xtuple, *data, dependent=""):
     matplotlib.rcParams['lines.linewidth'] = 2.5
-    matplotlib.rc('font',family='Arial')
-
+    matplotlib.rc('font', family='Arial')
 
     for datum in data:
         plt.plot(xtuple[0], datum[0])
-    plt.legend([datum[1] for datum in data],fontsize = 14)
-    plt.xlabel(xtuple[1],fontsize = 14)
-    plt.ylabel(dependent, fontsize = 14)
-    plt.title(title, fontsize = 20)
+    plt.legend([datum[1] for datum in data], fontsize=14)
+    plt.xlabel(xtuple[1], fontsize=14)
+    plt.ylabel(dependent, fontsize=14)
+    plt.title(title, fontsize=20)
 
     ax = plt.subplot(111)
     ax.spines["top"].set_visible(False)
@@ -24,6 +24,5 @@ def plot_params(title, xtuple, *data, dependent=""):
     ax.get_yaxis().tick_left()
     plt.yticks(fontsize=12)
     plt.xticks(fontsize=12)
-
 
     plt.show()
