@@ -5,6 +5,10 @@ import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
+from graphs import generate_figure
+from simulation import simulate
+from bikemodel import MeijaardModel
+from graphs import plot_params
 
 
 class AutocycleGUI(tk.Tk):
@@ -13,7 +17,7 @@ class AutocycleGUI(tk.Tk):
 
         tk.Tk.__init__(self, *args, **kwargs)
 
-        tk.Tk.iconbitmap(self,default='autocycleicon.ico')
+        tk.Tk.iconbitmap(self, default='autocycle_4yC_icon.ico')
         tk.Tk.wm_title(self, "Autocycle Simulator")
 
         container = tk.Frame(self)
@@ -44,30 +48,30 @@ class StartPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Welcome to the Autocycle Simulator!", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
-        button = ttk.Button(self, text="Visit Page 1",
+        button = ttk.Button(self, text="Make a Graph",
                            command=lambda: controller.show_frame(PageOne))
         button.pack()
 
-        button2 = ttk.Button(self, text="Visit Page 2",
+        button2 = ttk.Button(self, text="More Info",
                             command=lambda: controller.show_frame(PageTwo))
         button2.pack()
-
-        button3 = ttk.Button(self, text="Visit Page 3",
-                             command=lambda: controller.show_frame(PageThree))
-        button3.pack()
 
 class PageOne(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Page One!!!", font=LARGE_FONT)
+        label = tk.Label(self, text="Create a Graph", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
+
+        button3 = tk.Button(self, text = "See your graph",
+                            command = lambda: controller.show_frame(PageThree))
+        button3.pack()
 
         button1 = tk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
 
-        button2 = tk.Button(self, text="Page Two",
+        button2 = tk.Button(self, text="More Info",
                             command=lambda: controller.show_frame(PageTwo))
         button2.pack()
 
@@ -91,17 +95,21 @@ class PageThree(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
-        label.pack(pady=10,padx=10)
 
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
 
-        f = Figure(figsize=(5, 5), dpi=100)
+        model = MeijaardModel()
+        results = simulate(model, (.25,0,0,0),60,5.5)
+
+        f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % 5.5, (results['t'], 'Time (seconds)'),
+                    (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
+
+
 
         canvas = FigureCanvasTkAgg(f, self)
-        canvas.show()
+        canvas.draw()
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
         toolbar = NavigationToolbar2TkAgg(canvas, self)

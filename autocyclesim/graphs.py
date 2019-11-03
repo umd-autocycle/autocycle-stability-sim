@@ -34,12 +34,12 @@ def generate_figure(title, xtuple, *data, dependent=""):
 
     for datum in data:
         plt.plot(xtuple[0], datum[0], figure = fig)
-    plt.legend([datum[1] for datum in data], fontsize=14, figure = fig)
+    plt.legend([datum[1] for datum in data], fontsize=14)
     plt.xlabel(xtuple[1], fontsize=14, figure = fig)
     plt.ylabel(dependent, fontsize=14, figure = fig)
     plt.title(title, fontsize=20, figure = fig)
 
-    ax = plt.subplot(111, figure = fig)
+    ax = plt.subplot(111)
     ax.spines["top"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.spines["right"].set_visible(False)
