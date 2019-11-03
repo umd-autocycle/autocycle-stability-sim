@@ -1,12 +1,30 @@
 import tkinter as tk
 
+
+
 def makeagraph():
-   pass
+    pass
+
+
 
 def seethebike():
     pass
+
+
 def moreinfo():
-    pass
+
+    info = tk.Tk()
+    infobar = tk.Menu(info)
+    visualinfomenu = tk.Menu(infobar, tearoff=0)
+    visualinfomenu.add_command(label='Make a Graph', command=makeagraph)
+    visualinfomenu.add_command(label='See the Bike', command=seethebike)
+    infobar.add_cascade(label="Simulate", menu=visualinfomenu)
+    infobar.add_command(label="Exit", command=info.quit)
+
+    info.config(menu=infobar)
+    info.resizable(width=False, height=False)
+
+    info.mainloop()
 
 root = tk.Tk()
 menubar = tk.Menu(root)
