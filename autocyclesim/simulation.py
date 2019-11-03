@@ -10,10 +10,10 @@ def simulate(bike_model, initial_conditions, length, velocity):
 
     ret = {
         't': results.t,
-        'delta': results.y[2],
+        'delta': results.y[1],
         'ddelta': results.y[3],
         'phi': results.y[0],
-        'dphi': results.y[1],
+        'dphi': results.y[2],
     }
 
     # ret['delta'] = [min(pi, max(x, -pi)) for x in ret['delta']]
