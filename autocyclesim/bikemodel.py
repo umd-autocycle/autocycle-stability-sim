@@ -37,7 +37,7 @@ class MeijaardModel(BikeModel):
     m_fw = 3.0
     D = np.array([0.14, 0.28, 0.14])
 
-    def linearized_1st_order(self, v, f):
+    def linearized_1st_order(self, v, h):
         m_t = self.m_rw + self.m_rf + self.m_ff + self.m_fw
         x_t = (self.x_rf * self.m_rf + self.x_ff * self.m_ff + self.w * self.m_fw) / m_t
         z_t = (-self.r_rw * self.m_rw + self.z_rf * self.m_rf
@@ -121,10 +121,10 @@ class MeijaardModel(BikeModel):
             # print(k0)
             # print(k2)
             # print(c1)
-
+            g = np.array([0.0 if h[0] is None else (h[0])(t, e, v), 0.0 if h[1] is None else (h[1])(t, e, v)])
             q = np.array([e[0], e[1]])
             q_dot = np.array([e[2], e[3]])
-            q_ddot = np.dot(m_inv, f - np.dot(v * c1, q_dot) - np.dot((k0 + k2 * (v ** 2)), q))
+            q_ddot = np.dot(m_inv, g - np.dot(v * c1, q_dot) - np.dot((k0 + k2 * (v ** 2)), q))
 
             return [
                 q_dot[0],
