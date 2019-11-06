@@ -21,6 +21,7 @@ class AutocycleGUI(tk.Tk):
         tk.Tk.iconbitmap(self, default='autocycle_4yC_icon.ico')
         tk.Tk.wm_title(self, "Autocycle Simulator")
 
+
         container = tk.Frame(self)
 
         container.pack(side="top", fill="both", expand=True)
@@ -127,12 +128,43 @@ class GraphPage(tk.Frame):
 
         parampacker1.pack()
 
-        self.create_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel)
+        self.controldict = {
+            tk.IntVar(None, 1): None,
+            tk.IntVar(None, 2): "control_PD",
+            tk.IntVar(None, 3): "control_PID"
+        }
 
-    def create_plot(self, defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel):
+        defaultcontrol = self.controldict[1]
+        defaultperturb = None
+
+        self.create_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel, defaultcontrol, defaultperturb)
+
+    def create_plot(self, defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel,
+                    defaultcontrol, defaultperturb):
+        self.v = tk.IntVar(None, 1)
+        self.controlbuttons = tk.Frame(self)
+
+        self.nocontrol = tk.Radiobutton(self.controlbuttons,
+                                        text="Uncontrolled",
+                                        padx=20,
+                                        variable=self.v,
+                                        value=1
+                                       ).pack(side=tk.TOP)
+        self.pdcontrol = tk.Radiobutton(self.controlbuttons,
+                                        text="PD Controller",
+                                        padx=20,
+                                        variable=self.v,
+                                        value=2).pack(side=tk.TOP)
+        self.pidcontrol = tk.Radiobutton(self.controlbuttons,
+                                        text="PID Controller",
+                                        padx=20,
+                                        variable=self.v,
+                                        value=3).pack(side=tk.TOP)
+        self.controlbuttons.pack(side=tk.RIGHT)
+
         self.model = MeijaardModel()
         results = simulate(self.model, (defaultphi, defaultdelta, defaultphidel, defaultdeltadel), defaulttimespan,
-                           defaultvel)
+                           defaultvel, defaultcontrol, defaultperturb)
 
         self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % 5.5, (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
@@ -147,14 +179,36 @@ class GraphPage(tk.Frame):
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
-                         float(self.timespanvalue.get()), float(self.velvalue.get())))
+                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v], defaultperturb))
         self.button3.pack()
 
         self.button1 = tk.Button(self, text="Back to Home",
                                  command=lambda: self.controller.show_frame(StartPage))
         self.button1.pack()
 
-    def update_plot(self, newphi, newdelta, newphidel, newdeltadel, newtimespan, newvelvalue):
+
+    def update_plot(self, newphi, newdelta, newphidel, newdeltadel, newtimespan, newvelvalue, newcontrol, defaultperturb):
+        self.controlbuttons.pack_forget()
+        self.controlbuttons = tk.Frame(self)
+
+        self.nocontrol = tk.Radiobutton(self.controlbuttons,
+                                        text="Uncontrolled",
+                                        padx=20,
+                                        variable=self.v,
+                                        value=1
+                                        ).pack(side=tk.TOP)
+        self.pdcontrol = tk.Radiobutton(self.controlbuttons,
+                                        text="PD Controller",
+                                        padx=20,
+                                        variable=self.v,
+                                        value=2).pack(side=tk.TOP)
+        self.pidcontrol = tk.Radiobutton(self.controlbuttons,
+                                         text="PID Controller",
+                                         padx=20,
+                                         variable=self.v,
+                                         value=3).pack(side=tk.TOP)
+        self.controlbuttons.pack(side=tk.RIGHT)
+
         self.canvas.get_tk_widget().pack_forget()
         self.canvas._tkcanvas.pack_forget()
         self.button3.pack_forget()
@@ -165,11 +219,11 @@ class GraphPage(tk.Frame):
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
-                         float(self.timespanvalue.get()), float(self.velvalue.get())))
+                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v], defaultperturb))
         self.button3.pack(side=tk.BOTTOM)
 
         print('%.2f %.2f %.2f %.2f' % (newphi, newdelta, newphidel, newdeltadel))
-        results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue)
+        results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue, newcontrol, defaultperturb)
         self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % newvelvalue, (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
         self.canvas = FigureCanvasTkAgg(self.f, self)
@@ -177,6 +231,10 @@ class GraphPage(tk.Frame):
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+
+
+
 
 
 class InfoPage(tk.Frame):
