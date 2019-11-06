@@ -135,6 +135,12 @@ class GraphPage(tk.Frame):
             3: PIDPhi(k_p=5, k_i=.0000001, k_d=8)
         }
 
+        self.titledict = {
+            1: "Uncontrolled",
+            2: "PD Controlled",
+            3: "PID Controlled"
+        }
+
         defaultcontrol = None
         defaultperturb = None
 
@@ -228,7 +234,7 @@ class GraphPage(tk.Frame):
         self.button3.pack(side=tk.BOTTOM)
 
         results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue, control_method = newcontrol, perturbation=defaultperturb)
-        self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % newvelvalue, (results['t'], 'Time (seconds)'),
+        self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()],newvelvalue), (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
         self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
         self.toolbar.update()
