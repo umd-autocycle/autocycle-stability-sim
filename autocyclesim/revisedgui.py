@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from controls import PIDPhi, PDPhi
 
 LARGE_FONT = ("Verdana", 12)
 import matplotlib
@@ -129,12 +130,12 @@ class GraphPage(tk.Frame):
         parampacker1.pack()
 
         self.controldict = {
-            tk.IntVar(None, 1): None,
-            tk.IntVar(None, 2): "control_PD",
-            tk.IntVar(None, 3): "control_PID"
+            1: None,
+            2: PDPhi(k_p=5, k_d=8),
+            3: PIDPhi(k_p=5, k_i=.0000001, k_d=8)
         }
 
-        defaultcontrol = self.controldict[1]
+        defaultcontrol = None
         defaultperturb = None
 
         self.create_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel, defaultcontrol, defaultperturb)
@@ -164,7 +165,7 @@ class GraphPage(tk.Frame):
 
         self.model = MeijaardModel()
         results = simulate(self.model, (defaultphi, defaultdelta, defaultphidel, defaultdeltadel), defaulttimespan,
-                           defaultvel, defaultcontrol, defaultperturb)
+                           defaultvel, control_method = defaultcontrol, perturbation = defaultperturb)
 
         self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % 5.5, (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
@@ -173,18 +174,21 @@ class GraphPage(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
-        toolbar = NavigationToolbar2TkAgg(self.canvas, self)
-        toolbar.update()
+
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
-                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v], defaultperturb))
-        self.button3.pack()
-
+                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()], defaultperturb))
         self.button1 = tk.Button(self, text="Back to Home",
                                  command=lambda: self.controller.show_frame(StartPage))
-        self.button1.pack()
+        self.button1.pack(side=tk.BOTTOM)
+        self.button3.pack(side=tk.BOTTOM)
+
+        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar.update()
 
 
     def update_plot(self, newphi, newdelta, newphidel, newdeltadel, newtimespan, newvelvalue, newcontrol, defaultperturb):
@@ -213,22 +217,25 @@ class GraphPage(tk.Frame):
         self.canvas._tkcanvas.pack_forget()
         self.button3.pack_forget()
         self.button1.pack_forget()
+        self.toolbar.pack_forget()
         self.button1 = tk.Button(self, text="Back to Home",
                                  command=lambda: self.controller.show_frame(StartPage))
         self.button1.pack(side=tk.BOTTOM)
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
-                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v], defaultperturb))
+                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()], defaultperturb))
         self.button3.pack(side=tk.BOTTOM)
 
-        print('%.2f %.2f %.2f %.2f' % (newphi, newdelta, newphidel, newdeltadel))
-        results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue, newcontrol, defaultperturb)
+        results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue, control_method = newcontrol, perturbation=defaultperturb)
         self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % newvelvalue, (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
+        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar.update()
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
 
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
