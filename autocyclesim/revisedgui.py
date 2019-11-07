@@ -71,10 +71,10 @@ class GraphPage(tk.Frame):
 
         phi = tk.Frame(parampacker, self)
         self.phivalue = tk.Entry(phi)
-        self.phivalue.insert(tk.END, '1')
+        self.phivalue.insert(tk.END, '10')
         defaultphi = float(self.phivalue.get())
         self.phivalue.pack(padx=5, pady=5, side=tk.RIGHT)
-        philabel = tk.Label(phi, text="Phi in Radians:")
+        philabel = tk.Label(phi, text="Phi(degrees):")
         philabel.pack(padx=5, pady=5, side=tk.RIGHT)
         phi.pack(side=tk.LEFT)
 
@@ -83,7 +83,7 @@ class GraphPage(tk.Frame):
         self.phidelvalue.insert(tk.END, '0')
         defaultphidel = float(self.phidelvalue.get())
         self.phidelvalue.pack(padx=5, pady=5, side=tk.RIGHT)
-        phidellabel = tk.Label(phidel, text="Derivative of Phi in Radians:")
+        phidellabel = tk.Label(phidel, text="Derivative of Phi (degrees):")
         phidellabel.pack(padx=5, pady=5, side=tk.RIGHT)
         phidel.pack(side=tk.LEFT)
 
@@ -92,7 +92,7 @@ class GraphPage(tk.Frame):
         self.deltavalue.insert(tk.END, '0')
         defaultdelta = float(self.deltavalue.get())
         self.deltavalue.pack(padx=5, pady=5, side=tk.RIGHT)
-        deltalabel = tk.Label(delta, text="Delta in Radians:")
+        deltalabel = tk.Label(delta, text="Delta (degrees):")
         deltalabel.pack(padx=5, pady=5, side=tk.RIGHT)
         delta.pack(side=tk.LEFT)
 
@@ -101,7 +101,7 @@ class GraphPage(tk.Frame):
         self.deltadelvalue.insert(tk.END, '0')
         defaultdeltadel = float(self.deltadelvalue.get())
         self.deltadelvalue.pack(padx=5, pady=5, side=tk.RIGHT)
-        deltadellabel = tk.Label(deltadel, text="Derivative of Delta in Radians:")
+        deltadellabel = tk.Label(deltadel, text="Derivative of Delta (degrees):")
         deltadellabel.pack(padx=5, pady=5, side=tk.RIGHT)
         deltadel.pack(side=tk.LEFT)
 
@@ -114,7 +114,7 @@ class GraphPage(tk.Frame):
         self.timespanvalue.insert(tk.END, '60')
         defaulttimespan = float(self.timespanvalue.get())
         self.timespanvalue.pack(padx=5, pady=5, side=tk.RIGHT)
-        timespanlabel = tk.Label(timespan, text="Timespan in seconds:")
+        timespanlabel = tk.Label(timespan, text="Timespan (seconds):")
         timespanlabel.pack(padx=5, pady=5, side=tk.RIGHT)
         timespan.pack(side=tk.LEFT)
 
