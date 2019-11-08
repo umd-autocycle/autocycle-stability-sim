@@ -21,25 +21,24 @@ class MyApp(ShowBase):
         self.scene.setPos(-8, 42, 0)
 
         # load and transform panda actor
-        self.pandaActor = Actor("models/panda-model", {"walk": "models/panda-walk4"})
-        self.pandaActor.setScale(0.001, 0.01, 0.01)
-        self.pandaActor.reparentTo(self.render)
+        self.bike = Actor("models/panda-model", {"walk": "models/panda-walk4"})
+        self.bike.setScale(0.001, 0.01, 0.01)
+        self.bike.reparentTo(self.render)
         # loop animation
-        self.pandaActor.loop("walk")
+        self.bike.loop("walk")
 
         # create intervals needed for panda to walk
-        self.pandaActor.setHpr(180, 0, 1)
-        self.pandaActor.setPos(0, 0, 0)
-        self.taskMgr.add(self.pandaTask, "PandaTask")
+        self.bike.setHpr(180, 0, 1)
+        self.bike.setPos(0, -200, 1)
+        self.taskMgr.add(self.bikeTask, "bikeTask")
 
 
     #define procedure to move panda
-    def pandaTask(self, task):
-        angleDegrees=task.time*6
-        angleRadians=angleDegrees*pi/180
-        self.pandaActor.setPos(10*sin(angleRadians), -10*cos(angleRadians), 1)
-        self.camera.setPos(self.pandaActor.getPos() - (0, 30, -15))
-        self.camera.lookAt(self.pandaActor)
+    def bikeTask(self, task):
+        self.bike.setPos(self.bike.getPos()+(0, .5, 0))
+        self.camera.setPos(self.bike.getPos() - (0, 30, -10))
+        self.camera.lookAt(self.bike)
+        if self.bike.getPos()==(0, 155, 1): self.bike.setPos(0, -200, 1)
 
         return Task.cont
 
