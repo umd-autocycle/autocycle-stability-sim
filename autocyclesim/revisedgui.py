@@ -6,7 +6,7 @@ LARGE_FONT = ("Verdana", 12)
 import matplotlib
 
 matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 from graphs import generate_figure
 from simulation import simulate
@@ -193,7 +193,7 @@ class GraphPage(tk.Frame):
         self.button1.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
 
-        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
 
 
@@ -236,7 +236,7 @@ class GraphPage(tk.Frame):
         results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue, control_method = newcontrol, perturbation=defaultperturb)
         self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()],newvelvalue), (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
-        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()
