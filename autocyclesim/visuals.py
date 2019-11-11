@@ -27,10 +27,10 @@ class MyApp(ShowBase):
         self.bike.loop("walk")
 
         # move bike and follow with camera
-        self.taskMgr.add(self.bikeTask, "bikeTask")
+        self.taskMgr.add(self.bike_task, "bikeTask")
 
     # define procedure to move panda
-    def bikeTask(self, task):
+    def bike_task(self, task):
         # set bike's velocity vector
         self.bike.setPos(self.bike.getPos() + (0, 1, 0))
 
