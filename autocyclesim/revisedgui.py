@@ -174,7 +174,7 @@ class GraphPage(tk.Frame):
                            defaultvel, control_method = defaultcontrol, perturbation = defaultperturb)
 
         self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % 5.5, (results['t'], 'Time (seconds)'),
-                                 (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
+                                 (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'))
 
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()
@@ -235,7 +235,7 @@ class GraphPage(tk.Frame):
 
         results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue, control_method = newcontrol, perturbation=defaultperturb)
         self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()],newvelvalue), (results['t'], 'Time (seconds)'),
-                                 (results['phi'], 'Phi (radians)'), (results['delta'], 'Delta (radians)'))
+                                 (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'))
         self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
         self.canvas = FigureCanvasTkAgg(self.f, self)
