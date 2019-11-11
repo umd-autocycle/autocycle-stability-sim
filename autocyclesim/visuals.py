@@ -10,7 +10,7 @@ class MyApp(ShowBase):
         ShowBase.__init__(self)
 
         # load environment
-        self.scene = self.loader.loadModel("../Users/Cooper Grill/Documents/Autocycle/untitled.egg")
+        self.scene = self.loader.loadModel("../Users/Cooper Grill/Documents/Autocycle/grid floor.egg")
         self.scene.setHpr(0, 180, 0)
         # reparent model to render
         self.scene.reparentTo(self.render)
