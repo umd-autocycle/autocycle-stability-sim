@@ -23,8 +23,8 @@ class MyApp(ShowBase):
         # load and transform bike actor
         self.bike = Actor("models/panda-model", {"walk": "models/panda-walk4"})
         self.bike.setScale(0.001, 0.01, 0.01)
-        self.bike.setHpr(180, 0, 1)
-        self.bike.setPos(0, -200, 1)
+        self.bike.setHpr(180, 0, 0)
+        self.bike.setPos(0, 0, 1)
         self.bike.reparentTo(self.render)
         # loop animation
         self.bike.loop("walk")
@@ -34,10 +34,13 @@ class MyApp(ShowBase):
 
     # define procedure to move panda
     def bikeTask(self, task):
-        self.bike.setPos(self.bike.getPos() + (0, .5, 0))
+        self.bike.setPos(self.bike.getPos() + (0, 1, 0))
         self.camera.setPos(self.bike.getPos() - (0, 30, -10))
         self.camera.lookAt(self.bike)
-        if self.bike.getPos() == (0, 155, 1): self.bike.setPos(0, -200, 1)
+        if self.bike.getY() == 110 and 90 < self.bike.getHpr()[0] % 360 < 270: self.bike.setPos(0, -200, 1)
+        if self.bike.getY() == -110 and -90 < self.bike.getHpr()[0] % 360 < 90: self.bike.setPos(0, 200, 1)
+        if self.bike.getX() == 110 and 0 < self.bike.getHpr()[0] % 360 < 180: self.bike.setPos(-200, 0, 1)
+        if self.bike.getX() == -110 and 180 < self.bike.getHpr()[0] % 360 < 360: self.bike.setPos(200, 0, 1)
 
         return Task.cont
 
