@@ -3,9 +3,6 @@ from math import pi, sin, cos
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from direct.actor.Actor import Actor
-from direct.interval.IntervalGlobal import Sequence
-from panda3d.core import Point3
-from panda3d.core import GeoMipTerrain
 
 
 class MyApp(ShowBase):
@@ -34,9 +31,14 @@ class MyApp(ShowBase):
 
     # define procedure to move panda
     def bikeTask(self, task):
+        # set bike's velocity vector
         self.bike.setPos(self.bike.getPos() + (0, 1, 0))
+
+        # set camera
         self.camera.setPos(self.bike.getPos() - (0, 30, -10))
         self.camera.lookAt(self.bike)
+
+        # teleport bike based on position and angle
         if self.bike.getY() == 110 and 90 < self.bike.getHpr()[0] % 360 < 270: self.bike.setPos(0, -200, 1)
         if self.bike.getY() == -110 and -90 < self.bike.getHpr()[0] % 360 < 90: self.bike.setPos(0, 200, 1)
         if self.bike.getX() == 110 and 0 < self.bike.getHpr()[0] % 360 < 180: self.bike.setPos(-200, 0, 1)
