@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from controls import PIDPhi, PDPhi
+from controls import PIDPhi, PDPhi, PIDPhiInterpolated
 
 LARGE_FONT = ("Verdana", 12)
 import matplotlib
@@ -132,13 +132,15 @@ class GraphPage(tk.Frame):
         self.controldict = {
             1: None,
             2: PDPhi(k_p=5, k_d=8),
-            3: PIDPhi(k_p=5, k_i=.0000001, k_d=8)
+            3: PIDPhi(k_p=5, k_i=.0000001, k_d=8),
+            4: PIDPhiInterpolated(0,0,0)
         }
 
         self.titledict = {
             1: "Uncontrolled",
             2: "PD Controlled",
-            3: "PID Controlled"
+            3: "PID Controlled",
+            4: "PID Interpolated Controlled"
         }
 
         defaultcontrol = None
@@ -167,6 +169,11 @@ class GraphPage(tk.Frame):
                                         padx=20,
                                         variable=self.v,
                                         value=3).pack(side=tk.TOP)
+        self.pidIntercontrol = tk.Radiobutton(self.controlbuttons,
+                                         text="PID Interpolated Controlled",
+                                         padx=20,
+                                         variable=self.v,
+                                         value=4).pack(side=tk.TOP)
         self.controlbuttons.pack(side=tk.RIGHT)
 
         self.model = MeijaardModel()
@@ -217,6 +224,11 @@ class GraphPage(tk.Frame):
                                          padx=20,
                                          variable=self.v,
                                          value=3).pack(side=tk.TOP)
+        self.pidIntercontrol = tk.Radiobutton(self.controlbuttons,
+                                         text="PID Interpolated Controlled",
+                                         padx=20,
+                                         variable=self.v,
+                                         value=4).pack(side=tk.TOP)
         self.controlbuttons.pack(side=tk.RIGHT)
 
         self.canvas.get_tk_widget().pack_forget()
