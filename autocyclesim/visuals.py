@@ -32,7 +32,7 @@ class MyApp(ShowBase):
     # define procedure to move panda
     def bike_task(self, task):
         # set bike's velocity vector
-        self.bike.setPos(self.bike.getPos() + (0, 1, 0))
+        self.bike.setPos(self.bike.getPos() + (0, 0.05, 0))
 
         # set camera
         self.camera.setPos(self.bike.getPos() - (0, 30, -10))
