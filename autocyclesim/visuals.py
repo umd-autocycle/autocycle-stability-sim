@@ -18,12 +18,10 @@ class MyApp(ShowBase):
         self.scene.setScale(100, 100, 100)
 
         # load and transform bike actor
-        self.bike = Actor("../Users/Cooper Grill/Documents/Autocycle/bike.egg")  # "models/panda-model", {"walk": "models/panda-walk4"}
+        self.bike = Actor("../Users/Cooper Grill/Documents/Autocycle/bike.egg")
         self.bike.setHpr(180, 0, 0)
         self.bike.setPos(0, 0, 1)
         self.bike.reparentTo(self.render)
-        # loop animation
-        # self.bike.loop("walk")
 
         # move bike and follow with camera
         self.taskMgr.add(self.bike_task, "bikeTask")
