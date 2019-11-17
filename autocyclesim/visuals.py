@@ -19,6 +19,7 @@ class MyApp(ShowBase):
 
         # load and transform bike actor
         self.bike = Actor("../Users/Cooper Grill/Documents/Autocycle/bike.egg")
+        self.bike.setColor(0, 0, 0, 0)
         self.bike.setHpr(180, 0, 0)
         self.bike.setPos(0, 0, 1)
         self.bike.reparentTo(self.render)
@@ -29,7 +30,7 @@ class MyApp(ShowBase):
     # define procedure to move panda
     def bike_task(self, task):
         # set bike's velocity vector
-        self.bike.setPos(self.bike.getPos() + (0, 0.05, 0))
+        self.bike.setPos(self.bike.getPos() + (0, 1, 0))
 
         # set camera
         self.camera.setPos(self.bike.getPos() - (0, 30, -10))
