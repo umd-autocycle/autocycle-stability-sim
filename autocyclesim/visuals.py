@@ -33,7 +33,7 @@ class MyApp(ShowBase):
         self.bike.setPos(self.bike.getPos() + (0, 1, 0))
 
         # set camera
-        self.camera.setPos(self.bike.getPos() - (0, 30, -10))
+        self.camera.setPos(self.bike.getPos() + (-30*sin(pi*self.bike.getHpr()[0]/180), 30*cos(pi*self.bike.getHpr()[0]/180), 10))
         self.camera.lookAt(self.bike)
 
         # teleport bike based on position and angle
