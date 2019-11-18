@@ -4,7 +4,8 @@ from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from direct.actor.Actor import Actor
 
-# from simulation import simulate
+
+from simulation import simulate
 
 
 class MyApp(ShowBase):
@@ -45,10 +46,12 @@ class MyApp(ShowBase):
 
     # define task to move camera
     def camera_task(self, task):
-        self.camera.setPos(self.bike.getPos() + (-30 * sin(pi * self.bike.getHpr()[0] / 180), 30 * cos(pi * self.bike.getHpr()[0] / 180), 10))
+        self.camera.setPos(self.bike.getPos() + (
+            -30 * sin(pi * self.bike.getHpr()[0] / 180), 30 * cos(pi * self.bike.getHpr()[0] / 180), 10))
         self.camera.lookAt(self.bike)
 
         return Task.cont
+
 
 app = MyApp()
 app.run()
