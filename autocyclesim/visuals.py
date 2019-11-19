@@ -4,7 +4,6 @@ from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 from direct.actor.Actor import Actor
 
-
 from simulation import simulate
 
 
