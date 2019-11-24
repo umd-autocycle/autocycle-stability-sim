@@ -23,7 +23,7 @@ def settles(time, variable, goal):
     does not account well for oscillating behavior, need more sophisticated approach
     """
     threshold = settling_threshold(time, variable, goal)
-    return abs(variable[-1] - goal) >= threshold
+    return abs(variable[-1] - goal) < threshold
 
 
 def overshoot(time, variable, goal):
