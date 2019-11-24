@@ -71,17 +71,17 @@ class PIDPhiInterpolated(Control):
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 11 > v >= 9:  # 10
                 self.k_p = 420
-                self.k_i = .00001
+                self.k_i = 0
                 self.k_d = 90
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 13 > v >= 11:  # 12
                 self.k_p = 485
-                self.k_i = .00001
+                self.k_i = 0
                 self.k_d = 100
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif v >= 13:  # 14
                 self.k_p = 2178
-                self.k_i = .00001
+                self.k_i = 0
                 self.k_d = 300
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
 

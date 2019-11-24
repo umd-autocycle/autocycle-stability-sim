@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from controls import PIDPhi, PDPhi, PIDPhiInterpolated
+import metrics
 
 LARGE_FONT = ("Verdana", 12)
 import matplotlib
@@ -21,7 +22,6 @@ class AutocycleGUI(tk.Tk):
 
         tk.Tk.iconbitmap(self, default='autocycle_4yC_icon.ico')
         tk.Tk.wm_title(self, "Autocycle Simulator")
-
 
         container = tk.Frame(self)
 
@@ -133,7 +133,7 @@ class GraphPage(tk.Frame):
             1: None,
             2: PDPhi(k_p=5, k_d=8),
             3: PIDPhi(k_p=5, k_i=.0000001, k_d=8),
-            4: PIDPhiInterpolated(0,0,0)
+            4: PIDPhiInterpolated(0, 0, 0)
         }
 
         self.titledict = {
@@ -146,7 +146,8 @@ class GraphPage(tk.Frame):
         defaultcontrol = None
         defaultperturb = None
 
-        self.create_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel, defaultcontrol, defaultperturb)
+        self.create_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel,
+                         defaultcontrol, defaultperturb)
 
     def create_plot(self, defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel,
                     defaultcontrol, defaultperturb):
@@ -158,43 +159,48 @@ class GraphPage(tk.Frame):
                                         padx=20,
                                         variable=self.v,
                                         value=1
-                                       ).pack(side=tk.TOP)
+                                        ).pack(side=tk.TOP)
         self.pdcontrol = tk.Radiobutton(self.controlbuttons,
                                         text="PD Controller",
                                         padx=20,
                                         variable=self.v,
                                         value=2).pack(side=tk.TOP)
         self.pidcontrol = tk.Radiobutton(self.controlbuttons,
-                                        text="PID Controller",
-                                        padx=20,
-                                        variable=self.v,
-                                        value=3).pack(side=tk.TOP)
-        self.pidIntercontrol = tk.Radiobutton(self.controlbuttons,
-                                         text="PID Interpolated Controlled",
+                                         text="PID Controller",
                                          padx=20,
                                          variable=self.v,
-                                         value=4).pack(side=tk.TOP)
+                                         value=3).pack(side=tk.TOP)
+        self.pidIntercontrol = tk.Radiobutton(self.controlbuttons,
+                                              text="PID Interpolated Controlled",
+                                              padx=20,
+                                              variable=self.v,
+                                              value=4).pack(side=tk.TOP)
         self.controlbuttons.pack(side=tk.RIGHT)
 
         self.model = MeijaardModel()
         results = simulate(self.model, (defaultphi, defaultdelta, defaultphidel, defaultdeltadel), defaulttimespan,
-                           defaultvel, control_method = defaultcontrol, perturbation = defaultperturb)
+                           defaultvel, control_method=defaultcontrol, perturbation=defaultperturb)
+        st = float(metrics.settling_time(results['t'], results['phi'], 0))
+        sth = float(metrics.settling_threshold(results['t'], results['phi'], 0))
+        osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
+        osv, ost = float(osv), float(ost)
 
         self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % 5.5, (results['t'], 'Time (seconds)'),
-                                 (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'))
+                                 (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
+                                 (st, "Settling time: %.2f" % st, 'v'), (sth, "Settling threshold: %.2f" % sth, 'ph'),
+                                 (ost,"Maximum Overshoot: %.2f" % osv, 'v', osv))
 
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
-
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
 
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
-                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()], defaultperturb))
+                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
+                         defaultperturb))
         self.button1 = tk.Button(self, text="Back to Home",
                                  command=lambda: self.controller.show_frame(StartPage))
         self.button1.pack(side=tk.BOTTOM)
@@ -203,8 +209,8 @@ class GraphPage(tk.Frame):
         self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
 
-
-    def update_plot(self, newphi, newdelta, newphidel, newdeltadel, newtimespan, newvelvalue, newcontrol, defaultperturb):
+    def update_plot(self, newphi, newdelta, newphidel, newdeltadel, newtimespan, newvelvalue, newcontrol,
+                    defaultperturb):
         self.controlbuttons.pack_forget()
         self.controlbuttons = tk.Frame(self)
 
@@ -225,10 +231,10 @@ class GraphPage(tk.Frame):
                                          variable=self.v,
                                          value=3).pack(side=tk.TOP)
         self.pidIntercontrol = tk.Radiobutton(self.controlbuttons,
-                                         text="PID Interpolated Controlled",
-                                         padx=20,
-                                         variable=self.v,
-                                         value=4).pack(side=tk.TOP)
+                                              text="PID Interpolated Controlled",
+                                              padx=20,
+                                              variable=self.v,
+                                              value=4).pack(side=tk.TOP)
         self.controlbuttons.pack(side=tk.RIGHT)
 
         self.canvas.get_tk_widget().pack_forget()
@@ -242,24 +248,29 @@ class GraphPage(tk.Frame):
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
-                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()], defaultperturb))
+                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
+                         defaultperturb))
         self.button3.pack(side=tk.BOTTOM)
 
-        results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue, control_method = newcontrol, perturbation=defaultperturb)
-        self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()],newvelvalue), (results['t'], 'Time (seconds)'),
-                                 (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'))
+        results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue,
+                           control_method=newcontrol, perturbation=defaultperturb)
+        st = float(metrics.settling_time(results['t'], results['phi'], 0))
+        sth = float(metrics.settling_threshold(results['t'], results['phi'], 0))
+        osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
+        osv, ost = float(osv), float(ost)
+
+        self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()], newvelvalue),
+                                 (results['t'], 'Time (seconds)'),
+                                 (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
+                                 (st, "Settling time: %.2f" % st, 'v'), (sth, "Settling threshold: %.2f" % sth, 'ph'),
+                                 (ost,"Maximum Overshoot: %.2f" % osv, 'v', osv))
         self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
-
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
-
-
-
 
 
 class InfoPage(tk.Frame):
