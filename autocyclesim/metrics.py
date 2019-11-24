@@ -30,17 +30,17 @@ def overshoot(time, variable, goal):
     if variable[0] < goal:
         max_over = variable[0] - goal
 
-        for v in variable:
+        for v, t in zip(variable, time):
             if v > goal and v - goal < max_over:
-                return max_over
+                return max_over, t
             else:
                 max_over = v - goal
 
     else:
         max_over = goal - variable[0]
 
-        for v in variable:
+        for v, t in zip(variable, time):
             if v < goal and goal - v < max_over:
-                return max_over
+                return max_over, t
             else:
                 max_over = goal - v
