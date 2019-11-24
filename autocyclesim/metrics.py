@@ -12,7 +12,7 @@ def settling_time(time, variable, goal):
         return infinity
     else:
         for t, v in zip(reversed(time), reversed(variable)):
-            if abs(v - t) >= threshold:
+            if abs(v - t) < threshold:
                 return t - time[0]
 
     return 0
