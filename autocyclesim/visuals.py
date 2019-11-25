@@ -35,7 +35,7 @@ class MyApp(ShowBase):
         # set bike's velocity vector
         self.bike.setPos(self.bike.getPos() + (0, 1, 0))
 
-        # teleport bike based on position and angle
+        # move bike based on position and angle
         if self.bike.getY() == 110 and 90 < self.bike.getHpr()[0] % 360 < 270: self.bike.setPos(0, -200, 1)
         if self.bike.getY() == -110 and -90 < self.bike.getHpr()[0] % 360 < 90: self.bike.setPos(0, 200, 1)
         if self.bike.getX() == 110 and 0 < self.bike.getHpr()[0] % 360 < 180: self.bike.setPos(-200, 0, 1)
