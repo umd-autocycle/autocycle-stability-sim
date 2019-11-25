@@ -181,7 +181,7 @@ class GraphPage(tk.Frame):
                                               variable=self.v,
                                               value=4).pack(side=tk.TOP)
         self.lyapunov = tk.Radiobutton(self.controlbuttons,
-                                              text="PID Interpolated Controlled",
+                                              text="Lyapunov Controlled",
                                               padx=20,
                                               variable=self.v,
                                               value=5).pack(side=tk.TOP)
@@ -252,7 +252,7 @@ class GraphPage(tk.Frame):
                                          variable=self.v,
                                          value=4).pack(side=tk.TOP)
         self.lyapunov = tk.Radiobutton(self.controlbuttons,
-                                       text="PID Interpolated Controlled",
+                                       text="Lyapunov Controlled",
                                        padx=20,
                                        variable=self.v,
                                        value=5).pack(side=tk.TOP)

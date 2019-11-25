@@ -98,10 +98,7 @@ class Lyapunov(Control):
 
     def get_control(self, goals):
         def lyapunov_phi(t, e, v):
-            t1 = time.time()
             u3 = (10.4702 * e[0] + (-.5888 - .8868 * v * v) * e[1] - .104 * v * e[2] - .3277 * v * e[3] + sign(e[2]) * self.E3) / .1226
-            t2 = time.time()
-            print(t2-t1)
             return u3
 
         return lyapunov_phi
