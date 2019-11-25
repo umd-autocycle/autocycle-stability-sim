@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from controls import PIDPhi, PDPhi, PIDPhiInterpolated
+from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov
 
 LARGE_FONT = ("Verdana", 12)
 import matplotlib
@@ -71,7 +71,7 @@ class GraphPage(tk.Frame):
 
         phi = tk.Frame(parampacker, self)
         self.phivalue = tk.Entry(phi)
-        self.phivalue.insert(tk.END, '10')
+        self.phivalue.insert(tk.END, '2.5')
         defaultphi = float(self.phivalue.get())
         self.phivalue.pack(padx=5, pady=5, side=tk.RIGHT)
         philabel = tk.Label(phi, text="Phi(degrees):")
@@ -120,7 +120,7 @@ class GraphPage(tk.Frame):
 
         vel = tk.Frame(parampacker1, self)
         self.velvalue = tk.Entry(vel)
-        self.velvalue.insert(tk.END, '5.5')
+        self.velvalue.insert(tk.END, '1')
         defaultvel = float(self.velvalue.get())
         self.velvalue.pack(padx=5, pady=5, side=tk.RIGHT)
         vellabel = tk.Label(vel, text="Velocity in m/s:")
@@ -133,14 +133,16 @@ class GraphPage(tk.Frame):
             1: None,
             2: PDPhi(k_p=5, k_d=8),
             3: PIDPhi(k_p=5, k_i=.0000001, k_d=8),
-            4: PIDPhiInterpolated(0,0,0)
+            4: PIDPhiInterpolated(0, 0, 0),
+            5: Lyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064)
         }
 
         self.titledict = {
             1: "Uncontrolled",
             2: "PD Controlled",
             3: "PID Controlled",
-            4: "PID Interpolated Controlled"
+            4: "PID Interpolated Controlled",
+            5: "Lyapunov Controlled"
         }
 
         defaultcontrol = None
@@ -174,6 +176,11 @@ class GraphPage(tk.Frame):
                                          padx=20,
                                          variable=self.v,
                                          value=4).pack(side=tk.TOP)
+        self.lyapunov = tk.Radiobutton(self.controlbuttons,
+                                              text="Lyapunov Controlled",
+                                              padx=20,
+                                              variable=self.v,
+                                              value=5).pack(side=tk.TOP)
         self.controlbuttons.pack(side=tk.RIGHT)
 
         self.model = MeijaardModel()
@@ -229,6 +236,11 @@ class GraphPage(tk.Frame):
                                          padx=20,
                                          variable=self.v,
                                          value=4).pack(side=tk.TOP)
+        self.lyapunov = tk.Radiobutton(self.controlbuttons,
+                                       text="Lyapunov Controlled",
+                                       padx=20,
+                                       variable=self.v,
+                                       value=5).pack(side=tk.TOP)
         self.controlbuttons.pack(side=tk.RIGHT)
 
         self.canvas.get_tk_widget().pack_forget()

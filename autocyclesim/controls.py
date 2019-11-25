@@ -1,3 +1,5 @@
+from numpy import sign
+
 class Control:
     def get_control(self, goals):
         def no_control(t, e, v):
@@ -71,18 +73,94 @@ class PIDPhiInterpolated(Control):
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 11 > v >= 9:  # 10
                 self.k_p = 420
-                self.k_i = .00001
+                self.k_i = 0
                 self.k_d = 90
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 13 > v >= 11:  # 12
                 self.k_p = 485
-                self.k_i = .00001
+                self.k_i = 0
                 self.k_d = 100
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif v >= 13:  # 14
                 self.k_p = 2178
-                self.k_i = .00001
+                self.k_i = 0
                 self.k_d = 300
                 return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
 
         return pid_phi
+
+
+class Lyapunov(Control):
+
+
+    def __init__(self, np, z, npd, zd, E1, E3):
+        self.np = np
+        self.z = z
+        self.npd = npd
+        self.zd = zd
+        self.E1 = E1
+        self.E2 = E1
+        self.E3 = E3
+
+    def get_control(self, goals):
+        def lyapunov_phi(t, e, v):
+
+            u1 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]+self.E1)/.1226
+            u2 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]-self.E2)/.1226
+            u3 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]+sign(e[2])*self.E3)/.1226
+            u4 = 0
+            '''
+            c4 = 0
+            c3 = 0
+            c2 = 0
+            c1 = 0
+
+            if abs(e[2]) < self.zd:
+                if abs(e[0]) < self.z:
+                    c4 = min((abs(e[0])-self.z)/self.z, (abs(e[2])-self.zd)/self.zd)
+                    c3 = 2*min(abs(e[0])/self.np, (abs(e[2])-self.zd)/self.zd)
+                    c1 = 2 * min(abs(e[0])/self.np, abs(e[2])/self.npd) + min((abs(e[0])-self.z)/self.z, abs(e[2])/self.npd)
+                else:
+                    c3 = 2*min(abs(e[0])/self.np, (abs(e[2])-self.zd)/self.zd)
+                    c1 = min(e[0] / self.np, e[2] / self.npd) + min(0, e[2]/self.npd)
+            elif self.zd < abs(e[2]) < self.np:
+                if abs(e[0]) < self.z:
+                    c1 = 2 * min(abs(e[0]) / self.np, abs(e[2]) / self.npd) + min((abs(e[0])-self.z)/self.z, abs(e[2])/self.npd)
+                else:
+                    c1 = 2 * min(abs(e[0]) / self.np, abs(e[2]) / self.npd) + 0
+            else:
+                if abs(e[0]) < self.z:
+                    c1 = 2 * abs(e[0]) / self.np + (abs(e[0]) - self.z) / self.z
+                else:
+                    c1 = 2 * abs(e[0]) / self.np + 0
+            '''
+            if abs(e[0]) < self.z:
+                pz = (self.z-abs(e[0]))/self.z
+            else:
+                pz = 0
+            if abs(e[2]) < self.zd:
+                pzd = (self.zd-abs(e[2]))/self.zd
+            else:
+                pzd = 0
+            if abs(e[0]) < self.np:
+                pnp = e[0]/self.np
+            else:
+                pnp = 1
+            if abs(e[2]) < self.np:
+                pnpd = e[2]/self.np
+            else:
+                pnpd = 1
+
+            c4 = min(pz, pzd)
+            c3 = 2*min(pnp, pzd)
+            c2 = 0
+            c1 = 2*min(pnp, pnpd) + min(pz, pnpd)
+
+
+            if e[2] < 0:
+                c2 = c1
+                c1 = 0
+
+            return (c4*u4+c3*u3+c2*u2+c1*u1)/(c4+c3+c2+c1)
+
+        return lyapunov_phi
