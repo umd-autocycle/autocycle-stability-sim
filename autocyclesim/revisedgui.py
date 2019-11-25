@@ -3,16 +3,17 @@ from tkinter import ttk
 from controls import PIDPhi, PDPhi, PIDPhiInterpolated
 import metrics
 
-LARGE_FONT = ("Verdana", 12)
 import matplotlib
 
-matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 from graphs import generate_figure
 from simulation import simulate
 from bikemodel import MeijaardModel
 from graphs import plot_params
+
+matplotlib.use("TkAgg")
+LARGE_FONT = ("Verdana", 12)
 
 
 class AutocycleGUI(tk.Tk):
@@ -188,7 +189,7 @@ class GraphPage(tk.Frame):
         self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % 5.5, (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
                                  (st, "Settling time: %.2f" % st, 'v'), (sth, "Settling threshold: %.2f" % sth, 'ph'),
-                                 (ost,"Maximum Overshoot: %.2f" % osv, 'v', osv))
+                                 (ost, "Maximum Overshoot: %.2f" % osv, 'v', osv))
 
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()
@@ -197,8 +198,8 @@ class GraphPage(tk.Frame):
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
-        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
-                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
+        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
+                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
                          float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
                          defaultperturb))
         self.button1 = tk.Button(self, text="Back to Home",
@@ -246,8 +247,8 @@ class GraphPage(tk.Frame):
                                  command=lambda: self.controller.show_frame(StartPage))
         self.button1.pack(side=tk.BOTTOM)
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
-        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
-                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
+        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
+                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
                          float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
                          defaultperturb))
         self.button3.pack(side=tk.BOTTOM)
@@ -259,11 +260,12 @@ class GraphPage(tk.Frame):
         osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
         osv, ost = float(osv), float(ost)
 
+        self.f.clear()
         self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()], newvelvalue),
                                  (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
                                  (st, "Settling time: %.2f" % st, 'v'), (sth, "Settling threshold: %.2f" % sth, 'ph'),
-                                 (ost,"Maximum Overshoot: %.2f" % osv, 'v', osv))
+                                 (ost, "Maximum Overshoot: %.2f" % osv, 'v', osv))
         self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
         self.canvas = FigureCanvasTkAgg(self.f, self)
@@ -291,5 +293,6 @@ class InfoPage(tk.Frame):
         button1.pack()
 
 
-app = AutocycleGUI()
-app.mainloop()
+if __name__ == '__main__':
+    app = AutocycleGUI()
+    app.mainloop()
