@@ -1,16 +1,15 @@
 from scipy.integrate import solve_ivp
 from math import pi, radians, degrees
 import numpy as np
+from math import degrees, radians
 
 
+# initial conditions and return in degrees
 def simulate(bike_model, initial_conditions, length, velocity, control_method, perturbation):
     initial_conditions = [radians(x) for x in initial_conditions]
     t_eval = np.arange(0, length, 0.01)
-    results = solve_ivp(bike_model.linearized_1st_order(velocity,
-                                                        np.array([perturbation,
-                                                                  None if control_method is None else control_method.get_control(
-                                                                      None)])),
-                        [0, length], initial_conditions, t_eval=t_eval)
+    f = np.array([perturbation, None if control_method is None else control_method.get_control(None)])
+    results = solve_ivp(bike_model.linearized_1st_order(velocity, f), [0, length], initial_conditions, t_eval=t_eval)
 
     ret = {
         't': results.t,
