@@ -1,4 +1,5 @@
 from numpy import sign
+import time
 
 class Control:
     def get_control(self, goals):
@@ -92,6 +93,22 @@ class PIDPhiInterpolated(Control):
 
 class Lyapunov(Control):
 
+    def __init__(self, E3):
+        self.E3 = E3
+
+    def get_control(self, goals):
+        def lyapunov_phi(t, e, v):
+            t1 = time.time()
+            u3 = (10.4702 * e[0] + (-.5888 - .8868 * v * v) * e[1] - .104 * v * e[2] - .3277 * v * e[3] + sign(e[2]) * self.E3) / .1226
+            t2 = time.time()
+            print(t2-t1)
+            return u3
+
+        return lyapunov_phi
+
+
+class FuzzyLyapunov(Control):
+
 
     def __init__(self, np, z, npd, zd, E1, E3):
         self.np = np
@@ -103,13 +120,13 @@ class Lyapunov(Control):
         self.E3 = E3
 
     def get_control(self, goals):
-        def lyapunov_phi(t, e, v):
+        def fuzzy_lyapunov_phi(t, e, v):
 
             u1 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]+self.E1)/.1226
             u2 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]-self.E2)/.1226
             u3 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]+sign(e[2])*self.E3)/.1226
             u4 = 0
-            '''
+
             c4 = 0
             c3 = 0
             c2 = 0
@@ -150,12 +167,12 @@ class Lyapunov(Control):
                 pnpd = e[2]/self.np
             else:
                 pnpd = 1
-
+            
             c4 = min(pz, pzd)
             c3 = 2*min(pnp, pzd)
             c2 = 0
             c1 = 2*min(pnp, pnpd) + min(pz, pnpd)
-
+            '''
 
             if e[2] < 0:
                 c2 = c1
@@ -163,4 +180,4 @@ class Lyapunov(Control):
 
             return (c4*u4+c3*u3+c2*u2+c1*u1)/(c4+c3+c2+c1)
 
-        return lyapunov_phi
+        return fuzzy_lyapunov_phi
