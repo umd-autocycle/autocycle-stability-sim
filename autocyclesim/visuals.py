@@ -11,12 +11,10 @@ class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
-        # load environment
+        # load and transform environment
         self.scene = self.loader.loadModel("../Users/Cooper Grill/Documents/Autocycle/grid floor.egg")
         self.scene.setHpr(0, 180, 0)
-        # reparent model to render
         self.scene.reparentTo(self.render)
-        # apply scale and position
         self.scene.setScale(100, 100, 100)
 
         # load and transform back_frame
@@ -61,7 +59,7 @@ class MyApp(ShowBase):
     # define task to move camera
     def camera_task(self, task):
         self.camera.setPos(self.back_frame.getPos() + (
-            -30 * sin(pi * self.back_frame.getHpr()[0] / 180), 30 * cos(pi * self.back_frame.getHpr()[0] / 180), 10))
+            -30 * sin(pi * self.back_frame.getH() / 180), 30 * cos(pi * self.back_frame.getH() / 180), 10))
         self.camera.lookAt(self.back_frame)
 
         return Task.cont
