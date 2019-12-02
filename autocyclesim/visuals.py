@@ -9,6 +9,9 @@ from bikemodel import MeijaardModel
 
 
 class MyApp(ShowBase):
+    simulate = []
+    counter = 0
+
     def __init__(self):
         ShowBase.__init__(self)
 
@@ -28,11 +31,12 @@ class MyApp(ShowBase):
         # load and transform front_fork
         self.front_fork = self.loader.loadModel("../Users/Cooper Grill/Documents/Autocycle/front_fork.egg")
         self.front_fork.reparentTo(self.back_frame)
+        self.front_fork.setColor(1, 0, 0)
         # continuously move front fork in relation to rotation
         self.taskMgr.add(self.front_fork_task, "front_forkTask")
 
         # move bike and follow with camera
-        self.taskMgr.add(self.bike_task, "bikeTask", extraArgs=[0, SIMULATE], appendTask=True)
+        self.taskMgr.add(self.bike_task, "bikeTask")
         self.taskMgr.add(self.camera_task, "cameraTask")
 
     # define task to move front fork in relation to rotation
@@ -41,7 +45,7 @@ class MyApp(ShowBase):
                                -2.2 + 2.2 * cos(pi * self.front_fork.getH() / 180), 0)
 
     # define procedure to move bike
-    def bike_task(self, args, task):
+    def bike_task(self, task):
         # set bike's velocity vector
         self.back_frame.setPos(self.back_frame.getPos() + (0, 1, 0))
 
