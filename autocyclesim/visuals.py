@@ -5,6 +5,7 @@ from direct.task import Task
 from direct.actor.Actor import Actor
 
 from simulation import simulate
+from bikemodel import MeijaardModel
 
 
 class MyApp(ShowBase):
@@ -31,7 +32,7 @@ class MyApp(ShowBase):
         self.taskMgr.add(self.front_fork_task, "front_forkTask")
 
         # move bike and follow with camera
-        self.taskMgr.add(self.bike_task, "bikeTask")
+        self.taskMgr.add(self.bike_task, "bikeTask", extraArgs=[0, SIMULATE], appendTask=True)
         self.taskMgr.add(self.camera_task, "cameraTask")
 
     # define task to move front fork in relation to rotation
@@ -40,7 +41,7 @@ class MyApp(ShowBase):
                                -2.2 + 2.2 * cos(pi * self.front_fork.getH() / 180), 0)
 
     # define procedure to move bike
-    def bike_task(self, task):
+    def bike_task(self, args, task):
         # set bike's velocity vector
         self.back_frame.setPos(self.back_frame.getPos() + (0, 1, 0))
 
