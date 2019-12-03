@@ -8,8 +8,8 @@ from simulation import simulate
 from bikemodel import MeijaardModel
 
 
-class MyApp(ShowBase):
-    simulate = []
+class Visuals(ShowBase):
+    vsimulate = []
     counter = 0
 
     def __init__(self):
@@ -70,5 +70,5 @@ class MyApp(ShowBase):
         return Task.cont
 
 
-app = MyApp()
+app = Visuals()
 app.run()
