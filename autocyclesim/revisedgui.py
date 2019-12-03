@@ -216,9 +216,12 @@ class GraphPage(tk.Frame):
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
                          float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
                          defaultperturb))
+        self.animateButton = tk.Button(self, text="Animate", command = lambda: self.animate())
+
         self.button1 = tk.Button(self, text="Back to Home",
                                  command=lambda: self.controller.show_frame(StartPage))
         self.button1.pack(side=tk.BOTTOM)
+        self.animateButton.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
 
         self.toolbar = NavigationToolbar2Tk(self.canvas, self)
@@ -266,15 +269,19 @@ class GraphPage(tk.Frame):
         self.canvas._tkcanvas.pack_forget()
         self.button3.pack_forget()
         self.button1.pack_forget()
+        self.animateButton.pack_forget()
         self.toolbar.pack_forget()
         self.button1 = tk.Button(self, text="Back to Home",
                                  command=lambda: self.controller.show_frame(StartPage))
         self.button1.pack(side=tk.BOTTOM)
+        self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
                          float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
                          defaultperturb))
+        self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
+        self.animateButton.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
 
         results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue,
@@ -297,6 +304,8 @@ class GraphPage(tk.Frame):
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+    def animate(self):
+        pass
 
 
 class InfoPage(tk.Frame):
