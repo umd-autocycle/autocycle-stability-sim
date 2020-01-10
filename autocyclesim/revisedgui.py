@@ -63,8 +63,6 @@ class StartPage(tk.Frame):
 
 
 class GraphPage(tk.Frame):
-    animate = visuals.Visuals()  # class instance for visuals
-
     def __init__(self, parent, controller):
         self.controller = controller
         tk.Frame.__init__(self, parent)
@@ -199,8 +197,6 @@ class GraphPage(tk.Frame):
         results = simulate(self.model, (defaultphi, defaultdelta, defaultphidel, defaultdeltadel), defaulttimespan,
                            defaultvel, control_method=defaultcontrol, perturbation=defaultperturb)
 
-        self.animate.vsimulate = results  # upon creation, set class variable vsimulate to results
-
         st = float(metrics.settling_time(results['t'], results['phi'], 0))
         sth = float(metrics.settling_threshold(results['t'], results['phi'], 0))
         osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
@@ -292,8 +288,6 @@ class GraphPage(tk.Frame):
 
         results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue,
                            control_method=newcontrol, perturbation=defaultperturb)
-
-        self.animate.vsimulate = results  # upon update, set class variable vsimulate to results
 
         st = float(metrics.settling_time(results['t'], results['phi'], 0))
         sth = float(metrics.settling_threshold(results['t'], results['phi'], 0))
