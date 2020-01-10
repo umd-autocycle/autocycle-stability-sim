@@ -3,9 +3,12 @@ from math import pi, sin, cos
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
 
+import revisedgui
+
+
 
 class Visuals(ShowBase):
-    vsimulate = []
+    simulate = revisedgui.GraphPage().results
     counter = 0
 
     def __init__(self):

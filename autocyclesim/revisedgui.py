@@ -63,6 +63,8 @@ class StartPage(tk.Frame):
 
 
 class GraphPage(tk.Frame):
+    results = []
+
     def __init__(self, parent, controller):
         self.controller = controller
         tk.Frame.__init__(self, parent)
@@ -214,8 +216,8 @@ class GraphPage(tk.Frame):
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
-        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()), \
-                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()), \
+        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
+                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
                          float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
                          defaultperturb))
         self.animateButton = tk.Button(self, text="Animate", command = lambda: self.animate())
