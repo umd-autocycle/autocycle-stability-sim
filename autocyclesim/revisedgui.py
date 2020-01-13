@@ -12,7 +12,7 @@ from simulation import simulate
 from bikemodel import MeijaardModel
 from graphs import plot_params
 
-import visuals
+# import visuals
 
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 12)
