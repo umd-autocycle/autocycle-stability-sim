@@ -1,4 +1,5 @@
 from math import pi, sin, cos
+import time
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task import Task
@@ -34,29 +35,25 @@ class Visuals(ShowBase):
         self.back_frame = self.loader.loadModel("../Users/Cooper Grill/Documents/Autocycle/back_frame.egg")
         self.back_frame.reparentTo(self.front_fork)
         self.back_frame.setColor(0, 0, 1)
-        # continuously move back_frame in relation to rotation of front_fork
-        self.taskMgr.add(self.back_frame_task)
 
         # move bike and follow with camera
         self.taskMgr.add(self.edge_task)
         self.taskMgr.add(self.camera_task)
 
+        # initial conditions
+        self.front_fork.setHpr(results['delta'][0], 0, results['phi'][0])
+
         # interval loop to move bike
         ff_sequence = Sequence()
-        for (i, j) in zip(results['phi'], results['delta']):
-            ff_pos = self.front_fork.posInterval(0.01, (0, -0.5, 0), other=self.front_fork)
-            ff_hpr = self.front_fork.hprInterval(0.01, (j, 0, i))
-            ff_sequence.append(Parallel(ff_pos, ff_hpr))
+        for (i, j) in zip(results['delta'][1:], results['phi'][1:]):
+            ff_pos = self.front_fork.posInterval(0.01, (0, -0.55, 0), other=self.front_fork)
+            ff_hpr = self.front_fork.hprInterval(0.01, (i, 0, j))
+            bf_pos_hpr = self.back_frame.posHprInterval(0.01, (-2.2 * sin(pi * 1 / 180), -2.2 + 2.2 * cos(pi * 1 / 180), 0), (1, 0, 0), other=self.back_frame)
+            ff_sequence.append(Parallel(ff_pos, ff_hpr, bf_pos_hpr))
         ff_sequence.start()
 
-    # define task to move front fork in relation to rotation
-    def back_frame_task(self, task):
-        self.back_frame.setPos(-2.2 * sin(pi * self.back_frame.getH() / 180),
-                               -2.2 + 2.2 * cos(pi * self.back_frame.getH() / 180), 0)
-
-    # define procedure to move bike if it reaches an edge
+    # define task to move bike if it reaches an edge
     def edge_task(self, task):
-        # move bike based on position and angle
         if self.front_fork.getY() >= 110 and 90 < self.front_fork.getHpr()[0] % 360 < 270:
             self.front_fork.setPos(self.front_fork.getX(), -200, 1)
         if self.front_fork.getY() <= -110 and -90 < self.front_fork.getHpr()[0] % 360 < 90:
@@ -71,7 +68,7 @@ class Visuals(ShowBase):
     # define task to move camera
     def camera_task(self, task):
         self.camera.setPos(self.front_fork.getPos() + (
-            -30 * sin(pi * self.front_fork.getH() / 180), 30 * cos(pi * self.front_fork.getH() / 180), 10))
+            -30 * sin(pi * self.back_frame.getH() / 180), 30 * cos(pi * self.back_frame.getH() / 180), 10))
         self.camera.lookAt(self.back_frame)
 
         return Task.cont
