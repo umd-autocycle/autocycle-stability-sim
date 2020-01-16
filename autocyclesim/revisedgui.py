@@ -12,7 +12,7 @@ from simulation import simulate
 from bikemodel import MeijaardModel
 from graphs import plot_params
 
-# import visuals
+import subprocess
 
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 12)
@@ -310,7 +310,7 @@ class GraphPage(tk.Frame):
 
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
     def animate(self):
-        pass
+        subprocess.call("ppython visuals.py")
 
 
 class InfoPage(tk.Frame):
