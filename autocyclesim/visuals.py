@@ -5,7 +5,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 from direct.interval.IntervalGlobal import *
 
-# import revisedgui
+import revisedgui
 import simulation
 import bikemodel
 
