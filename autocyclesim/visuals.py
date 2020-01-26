@@ -1,7 +1,6 @@
 from math import pi, sin, cos
 
 from direct.showbase.ShowBase import ShowBase
-from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 from direct.interval.IntervalGlobal import *
 
