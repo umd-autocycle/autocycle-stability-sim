@@ -61,7 +61,7 @@ class Visuals(ShowBase):
         ff_sequence.start()
 
     # define task to move bike if it reaches an edge
-    def edge_task(self, task):
+    def edge_task(self):
         if self.back_frame.getZ() != 1:
             self.back_frame.setPos(self.back_frame.getX(), self.back_frame.getY(), 1)
         if self.back_frame.getP() != 0:
