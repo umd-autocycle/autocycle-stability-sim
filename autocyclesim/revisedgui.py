@@ -310,7 +310,7 @@ class GraphPage(tk.Frame):
 
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
     def animate(self):
-        subprocess.call("ppython visuals.py")
+        # subprocess.call("ppython visuals.py %f" %(RESULTS,))
 
 
 class InfoPage(tk.Frame):
