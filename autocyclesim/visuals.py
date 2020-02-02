@@ -14,15 +14,15 @@ import bikemodel
 
 class Visuals(ShowBase):
     # generate results based on current state of gui
-    control = (None if sys.argv[7] == "None" else controls.PDPhi(k_p=5, k_d=8) if sys.argv[
-                                                                                      7] == "<controls.PDPhi" else controls.PIDPhi(
-        k_p=5, k_i=.0000001, k_d=8) if sys.argv[7] == "<controls.PIDPhi" else controls.PIDPhiInterpolated(0, 0, 0) if
-    sys.argv[7] == "<controls.PIDPhiInterpolated" else controls.Lyapunov(E3=.1) if sys.argv[
-                                                                                       7] == "<controls.Lyapunov" else controls.FuzzyLyapunov(
-        np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064))
+    control = (None if sys.argv[7] == "None" else controls.PDPhi(k_p=5, k_d=8) if sys.argv[7] == "<controls.PDPhi" else
+               controls.PIDPhi(k_p=5, k_i=.0000001, k_d=8) if sys.argv[7] == "<controls.PIDPhi" else
+               controls.PIDPhiInterpolated(0, 0, 0) if sys.argv[7] == "<controls.PIDPhiInterpolated" else
+               controls.Lyapunov(E3=.1) if sys.argv[7] == "<controls.Lyapunov" else
+               controls.FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064))
     results = simulation.simulate(bikemodel.MeijaardModel(), np.array(sys.argv[1:5]).astype(np.float),
                                   float(sys.argv[5]), float(sys.argv[6]), control_method=control, perturbation=None)
-    # results = simulation.simulate(bikemodel.MeijaardModel(), [10, 0, 0, 0], 60, 5.5, control_method=None, perturbation=None)
+    """ results = simulation.simulate(bikemodel.MeijaardModel(), [10, 0, 0, 0], 60, 5.5, control_method=None,
+                                  perturbation=None) """
     v = float(sys.argv[6])
 
     def __init__(self):
