@@ -319,10 +319,11 @@ class InfoPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        infotext = "This application visualizes the motion of a bicycle over time.\n Utilizing a variety of starting" + \
-                   " parameters and control schemes, the roll, yaw, and other parameters of a bicycle may be visualized over" + \
-                   " a span of time.\n Currently, these results may be seen in graph form only.\n In the next update, you will" + \
-                   " be able to watch an animation of the bike in motion.\n For more information, please visit www.autocycle.io."
+        infotext = "This application visualizes the motion of a bicycle over time.\n Utilizing a variety of starting" \
+                   "parameters and control schemes, the roll, yaw, and other parameters of a bicycle may be" \
+                   "visualized over a span of time.\n Currently, these results may be seen in graph form only.\n In" \
+                   "the next update, you will be able to watch an animation of the bike in motion.\n For more" \
+                   "information, please visit www.autocycle.io."
 
         label = tk.Label(self, text=infotext, font=LARGE_FONT)
         label.pack(pady=10, padx=10)
