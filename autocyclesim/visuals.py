@@ -55,7 +55,8 @@ class Visuals(ShowBase):
         self.taskMgr.add(self.camera_task)
 
         # initial conditions
-        self.front_fork.setHpr(self.results['delta'][0], 0, self.results['phi'][0])
+        self.back_frame.setHpr(0, 0, self.results['phi'][0])
+        self.front_fork.setHpr(self.results['delta'][0], 0, 0)
 
         # interval loop to move bike
         prev = self.results['phi'][0]
