@@ -1,6 +1,6 @@
 from numpy import sign
 import time
-
+from math import sqrt
 class Control:
     def get_control(self, goals):
         def no_control(t, e, v):
@@ -56,37 +56,31 @@ class PIDPhiInterpolated(Control):
                 self.k_p = 79.5
                 self.k_i = 0
                 self.k_d = 155
-                return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 5 > v >= 3:  # 4
                 self.k_p = 230
                 self.k_i = 0
                 self.k_d = 100
-                return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 7 > v >= 5:  # 5.5
                 self.k_p = 295
                 self.k_i = 0
                 self.k_d = 110
-                return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 9 > v >= 7:  # 8
                 self.k_p = 270
                 self.k_i = 0
                 self.k_d = 85
-                return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 11 > v >= 9:  # 10
                 self.k_p = 420
                 self.k_i = 0
                 self.k_d = 90
-                return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif 13 > v >= 11:  # 12
                 self.k_p = 485
                 self.k_i = 0
                 self.k_d = 100
-                return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
             elif v >= 13:  # 14
                 self.k_p = 2178
                 self.k_i = 0
                 self.k_d = 300
-                return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
+            return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
 
         return pid_phi
 
@@ -98,8 +92,16 @@ class Lyapunov(Control):
 
     def get_control(self, goals):
         def lyapunov_phi(t, e, v):
-            u3 = (10.4702 * e[0] + (-.5888 - .8868 * v * v) * e[1] - .104 * v * e[2] - .3277 * v * e[3] + sign(e[2]) * self.E3) / .1226
-            return u3
+
+            a = 10.4702 * e[0]
+            b = (-.5888 - .8868 * v * v) * e[1]
+            c = - .104 * v * e[2]
+            d = - .3277 * v * e[3]
+            f = sign(e[2]) * self.E3
+
+            #print(str(t)+'       '+str((a + b + c + d + f)/ .1226))
+
+            return (a + b + c + d + f)/ .1226
 
         return lyapunov_phi
 
