@@ -3,8 +3,6 @@ from simulation import simulate
 from scipy.optimize import minimize
 from bikemodel import MeijaardModel
 import metrics
-import numpy as np
-from scipy.optimize import LinearConstraint
 
 def optimize(intial_val, vel, tspan, intial_constants, max_T):
     def func(x):
@@ -21,7 +19,7 @@ def optimize(intial_val, vel, tspan, intial_constants, max_T):
     def con_torque(x):
         results = func(x)
 
-        con = -metrics.max_torque(p)
+        con = metrics.max_torque(p)-max_T
         return con
 
     con1 = {'type':'eq','fun':con_robust}
@@ -31,6 +29,3 @@ def optimize(intial_val, vel, tspan, intial_constants, max_T):
     res = minimize(objective, intial_constants,constraints=cons)
 
     return res.x
-
-
-out P I D
