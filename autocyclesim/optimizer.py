@@ -17,9 +17,7 @@ def optimize(intial_val, vel, tspan, intial_constants, max_T):
         con = results[0,0] - results[0,1]
         return con
     def con_torque(x):
-        results = func(x)
-
-        con = metrics.max_torque(p)-max_T
+        con = metrics.max_torque(range_torque)-max_T #not sure how to get a range of torques
         return con
 
     con1 = {'type':'eq','fun':con_robust}
