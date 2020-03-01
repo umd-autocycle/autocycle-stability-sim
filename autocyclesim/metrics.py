@@ -1,4 +1,7 @@
 from math import inf as infinity
+from simulation import simulate
+
+THRESHOLD = 0.001
 
 
 def settling_threshold(time, variable, goal):
@@ -46,3 +49,25 @@ def overshoot(time, variable, goal):
                 max_t = t
 
     return max_over, max_t
+
+
+def response_time(time, variable, goal):
+    for v, t in zip(variable, time):
+        if abs(v - goal) < THRESHOLD:
+            return t
+
+    return time[-1]
+
+
+def robustness(init_parameters, velocity, model, control):
+    phi, delta, d_phi, d_delta = init_parameters
+    to_vary = phi, delta, d_phi, d_delta, velocity
+
+    for vary in to_vary:
+        results = simulate(model, init_parameters, 60, velocity, control, None)
+        if settles(results['t'], results['phi'], 0):
+            pass
+
+
+def max_torque(torque):
+    max(torque)
