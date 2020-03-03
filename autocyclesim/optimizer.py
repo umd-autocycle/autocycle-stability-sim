@@ -4,34 +4,40 @@ from scipy.optimize import minimize
 from bikemodel import MeijaardModel
 import metrics
 
-def optimize(intial_val, vel, tspan, intial_constants, max_T, focus):
+def optimize(intial_val, vel, tspan, intial_constants, focus, max_T, max_response, min_robust):
     def func(x):
-        return simulate(MeijaardModel, intial_val, tspan, vel, PIDPhi(x), None)
+        return simulate(MeijaardModel, intial_val, tspan, vel, PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2]), None)
 
     def con_time(x):
         results = func(x)
-        con = float(metrics.settling_time(results['t'], results['phi'], 0))
+        con = metrics.settling_time(results['t'], results['phi'], 0)
         return con
+
     def con_robust(x):
-        results = metrics.robustness(x, MeijaardModel, PIDPhi, 0)
-        con = results[0,0] - results[0,1]
+        results = metrics.robustness(intial_val, vel, MeijaardModel, PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2]))
+        con = results['phi']
         return con
+
     def con_torque(x):
-        con = metrics.max_torque(range_torque)-max_T #not sure how to get a range of torques
+        results = func(x)
+        range_T = PIDPhi.get_control
+        con = metrics.max_torque(range_T)-max_T #not sure how to get a range of torques
         return con
+
     def objective(x):
         if focus == 'Time':
             return con_time(x)
         elif focus == 'Robust':
             return con_robust(x)
+
     def con1(x):
         if focus == 'Time':
-            return con_robust(x)
+            return con_robust(x) - min_robust
         elif focus == 'Robust':
-            return con_time(x)
+            return max_response - con_time(x)
 
 
-    cons = [{'type':'eq', 'fun':con1}, {'type': 'ineq', 'fun': con_torque}]
+    cons = [{'type':'ineq', 'fun':con1}, {'type': 'ineq', 'fun': con_torque}]
 
     res = minimize(objective, intial_constants, constraints=cons)
 
