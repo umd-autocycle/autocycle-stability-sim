@@ -61,12 +61,29 @@ def response_time(time, variable, goal):
 
 def robustness(init_parameters, velocity, model, control):
     phi, delta, d_phi, d_delta = init_parameters
-    to_vary = phi, delta, d_phi, d_delta, velocity
+    init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta, 'velocity': velocity}
+    ret = {}
 
-    for vary in to_vary:
-        results = simulate(model, init_parameters, 60, velocity, control, None)
-        if settles(results['t'], results['phi'], 0):
-            pass
+    for vary in init_pkg.keys():
+        min_var = init_pkg[vary]
+        max_var = init_pkg[vary] + 30
+        mid = (min_var + max_var) / 2
+
+        while max_var > min_var:
+            init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta, 'velocity': velocity, vary: mid}
+            init_parameters = init_pkg['phi'], init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
+            velocity = init_pkg['velocity']
+
+            results = simulate(model, init_parameters, 60, velocity, control, None)
+            if settles(results['t'], results['phi'], 0):
+                min_var = mid
+            else:
+                max_var = mid - 1
+            mid = (min_var + max_var) / 2
+
+        ret[vary] = mid
+
+    return ret
 
 
 def max_torque(torque):
