@@ -36,3 +36,6 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
     res = minimize(objective, intial_constants, constraints=cons)
 
     return res.x
+
+if __name__=='__main__':
+    optimize(intial_val=[10,0,0,0], vel=6, tspan=60, intial_constants=[1,1,1], c_robust=1, c_response=1, max_torque=20, max_response=10, min_robust=10)
