@@ -59,7 +59,7 @@ def response_time(time, variable, goal):
     return time[-1]
 
 
-def robustness(init_parameters, velocity, model, control):
+def robustness(init_parameters, velocity, model, control, timespan):
     phi, delta, d_phi, d_delta = init_parameters
     init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta, 'velocity': velocity}
     ret = {}
@@ -74,7 +74,7 @@ def robustness(init_parameters, velocity, model, control):
             init_parameters = init_pkg['phi'], init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
             velocity = init_pkg['velocity']
 
-            results = simulate(model, init_parameters, 60, velocity, control, None)
+            results = simulate(model, init_parameters, timespan, velocity, control, None)
             if settles(results['t'], results['phi'], 0):
                 min_var = mid
             else:
