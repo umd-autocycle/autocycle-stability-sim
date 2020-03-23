@@ -9,7 +9,8 @@ import numpy as np
 
 def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max_torque, max_response, min_robust):
     def func(x):
-        return simulate(MeijaardModel(), intial_val, tspan, vel, PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2]), None)
+        return simulate(MeijaardModel(), intial_val, tspan, vel,
+                        PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2], max_torque=max_torque), None)
 
     def time(x):
         results = func(x)
@@ -28,7 +29,7 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
     def torque(x):
         results = func(x)
         range_torque = []
-        controller = PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2])
+        controller = PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2], max_torque=max_torque)
         for i in range(0, np.size(results['phi']) - 1):
             e = [results['phi'][i], results['delta'][i], results['dphi'][i], results['ddelta'][i]]
             temp = controller.get_control(goals=None)(t=results['t'][i], e=e, v=vel)
@@ -42,9 +43,9 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
         time_obj = (time(x) - max_response)
         # robust_obj = (robust(x) - min_robust) ** 2
         robust_obj = 0
-        tor = torque(x)
-        print('torque:', tor)
-        torque_obj = 10000 ** (tor - max_torque)
+        # tor = torque(x)
+        # print('torque:', tor)
+        torque_obj = 0  # 10000 ** (tor - max_torque)
         return c_response * time_obj + c_robust * robust_obj + torque_obj
 
     res = minimize(objective, intial_constants, method='Powell')
@@ -54,8 +55,8 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
 
 if __name__ == '__main__':
     test = optimize(intial_val=[10, 0, 0, 0], vel=5.5, tspan=30,
-                    intial_constants=[ 0, 0,  0], c_robust=1, c_response=1e2,
-                    max_torque= 20, max_response=0, min_robust=10)
+                    intial_constants=[0, 0, 0], c_robust=1, c_response=1e2,
+                    max_torque=20, max_response=0, min_robust=10)
     print(test)
     # 5.5 4.34s [ 3.44077315e+00, -2.23763598e-06,  8.66977482e-02] then @100 3.12s [ 8.38025928e+00, -1.32098845e-06,  3.49506937e+00]
     # 10  29s [ 1.19326220e+00, -6.49562030e-06,  1.31230247e+00] then @100 t 3.36s [ 9.76156844e+00, -9.45659175e-07, -4.11625537e-01]

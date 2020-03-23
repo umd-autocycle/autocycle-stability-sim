@@ -1,6 +1,8 @@
 from numpy import sign
 import time
 from math import sqrt
+
+
 class Control:
     def get_control(self, goals):
         def no_control(t, e, v):
@@ -25,16 +27,18 @@ class PIDPhi(Control):
     integral = 0
     last_time = 0
 
-    def __init__(self, k_p, k_i, k_d):
+    def __init__(self, k_p, k_i, k_d, max_torque):
         self.k_p = k_p
         self.k_i = k_i
         self.k_d = k_d
+        self.max_torque = max_torque
 
     def get_control(self, goals):
         def pid_phi(t, e, v):
             self.integral += e[0] * t - self.last_time
             self.last_time = t
-            return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
+            return min(self.max_torque,
+                       max(-self.max_torque, self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral))
 
         return pid_phi
 
@@ -92,22 +96,20 @@ class Lyapunov(Control):
 
     def get_control(self, goals):
         def lyapunov_phi(t, e, v):
-
             a = 10.4702 * e[0]
             b = (-.5888 - .8868 * v * v) * e[1]
             c = - .104 * v * e[2]
             d = - .3277 * v * e[3]
             f = sign(e[2]) * self.E3
 
-            #print(str(t)+'       '+str((a + b + c + d + f)/ .1226))
+            # print(str(t)+'       '+str((a + b + c + d + f)/ .1226))
 
-            return (a + b + c + d + f)/ .1226
+            return (a + b + c + d + f) / .1226
 
         return lyapunov_phi
 
 
 class FuzzyLyapunov(Control):
-
 
     def __init__(self, np, z, npd, zd, E1, E3):
         self.np = np
@@ -121,9 +123,12 @@ class FuzzyLyapunov(Control):
     def get_control(self, goals):
         def fuzzy_lyapunov_phi(t, e, v):
 
-            u1 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]+self.E1)/.1226
-            u2 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]-self.E2)/.1226
-            u3 = (10.4702*e[0]+(-.5888-.8868*v*v)*e[1]-.104*v*e[2]-.3277*v*e[3]+sign(e[2])*self.E3)/.1226
+            u1 = (10.4702 * e[0] + (-.5888 - .8868 * v * v) * e[1] - .104 * v * e[2] - .3277 * v * e[
+                3] + self.E1) / .1226
+            u2 = (10.4702 * e[0] + (-.5888 - .8868 * v * v) * e[1] - .104 * v * e[2] - .3277 * v * e[
+                3] - self.E2) / .1226
+            u3 = (10.4702 * e[0] + (-.5888 - .8868 * v * v) * e[1] - .104 * v * e[2] - .3277 * v * e[3] + sign(
+                e[2]) * self.E3) / .1226
             u4 = 0
 
             c4 = 0
@@ -133,15 +138,17 @@ class FuzzyLyapunov(Control):
 
             if abs(e[2]) < self.zd:
                 if abs(e[0]) < self.z:
-                    c4 = min((abs(e[0])-self.z)/self.z, (abs(e[2])-self.zd)/self.zd)
-                    c3 = 2*min(abs(e[0])/self.np, (abs(e[2])-self.zd)/self.zd)
-                    c1 = 2 * min(abs(e[0])/self.np, abs(e[2])/self.npd) + min((abs(e[0])-self.z)/self.z, abs(e[2])/self.npd)
+                    c4 = min((abs(e[0]) - self.z) / self.z, (abs(e[2]) - self.zd) / self.zd)
+                    c3 = 2 * min(abs(e[0]) / self.np, (abs(e[2]) - self.zd) / self.zd)
+                    c1 = 2 * min(abs(e[0]) / self.np, abs(e[2]) / self.npd) + min((abs(e[0]) - self.z) / self.z,
+                                                                                  abs(e[2]) / self.npd)
                 else:
-                    c3 = 2*min(abs(e[0])/self.np, (abs(e[2])-self.zd)/self.zd)
-                    c1 = min(e[0] / self.np, e[2] / self.npd) + min(0, e[2]/self.npd)
+                    c3 = 2 * min(abs(e[0]) / self.np, (abs(e[2]) - self.zd) / self.zd)
+                    c1 = min(e[0] / self.np, e[2] / self.npd) + min(0, e[2] / self.npd)
             elif self.zd < abs(e[2]) < self.np:
                 if abs(e[0]) < self.z:
-                    c1 = 2 * min(abs(e[0]) / self.np, abs(e[2]) / self.npd) + min((abs(e[0])-self.z)/self.z, abs(e[2])/self.npd)
+                    c1 = 2 * min(abs(e[0]) / self.np, abs(e[2]) / self.npd) + min((abs(e[0]) - self.z) / self.z,
+                                                                                  abs(e[2]) / self.npd)
                 else:
                     c1 = 2 * min(abs(e[0]) / self.np, abs(e[2]) / self.npd) + 0
             else:
@@ -177,6 +184,6 @@ class FuzzyLyapunov(Control):
                 c2 = c1
                 c1 = 0
 
-            return (c4*u4+c3*u3+c2*u2+c1*u1)/(c4+c3+c2+c1)
+            return (c4 * u4 + c3 * u3 + c2 * u2 + c1 * u1) / (c4 + c3 + c2 + c1)
 
         return fuzzy_lyapunov_phi
