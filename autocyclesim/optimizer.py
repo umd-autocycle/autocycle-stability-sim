@@ -8,7 +8,6 @@ import numpy as np
 
 
 def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max_torque, max_response, min_robust):
-    i = 0
     def func(x):
         return simulate(MeijaardModel(), intial_val, tspan, vel, PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2]), None)
 
@@ -28,12 +27,12 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
         results = func(x)
         range_torque = []
         controller = PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2])
-        for i in range(0, np.size(results['phi'])-1):
+        for i in range(0, np.size(results['phi']) - 1):
             e = [results['phi'][i], results['delta'][i], results['dphi'][i], results['ddelta'][i]]
             temp = controller.get_control(goals=None)(t=results['t'][i], e=e, v=vel)
             range_torque.append(temp)
-        #print('torque', range_torque[0], max(range_torque), range_torque.index(max(range_torque)))
-        con = 1*(max(range_torque) - max_torque)
+        # print('torque', range_torque[0], max(range_torque), range_torque.index(max(range_torque)))
+        con = max(range_torque)
         return con
 
     def objective(x):
@@ -42,25 +41,19 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
         # robust_obj = (robust(x) - min_robust) ** 2
         robust_obj = 0
         tor = torque(x)
-        print(tor)
-        if tor <= max_torque:
-            torque_obj = 0
-        else:
-            torque_obj = infinity
+        print('torque:', tor)
+        torque_obj = 10000 ** (tor - max_torque)
         return c_response * time_obj + c_robust * robust_obj + torque_obj
-
-    # cons = {'type': 'ineq', 'fun': con_torque}
-    # bon = [[0, 300], [0, 10], [0, 300]]
-    # opt = {'maxiter': 100, 'disp': True}
 
     res = minimize(objective, intial_constants, method='Powell')
     print(res.success)
     return res.x
 
 
-
 if __name__ == '__main__':
-    test = optimize(intial_val=[10, 0, 0, 0], vel=5.5, tspan=10, intial_constants=[0, 0, 0], c_robust=1, c_response=5,
-             max_torque=20, max_response=0, min_robust=10)
+    test = optimize(intial_val=[10, 0, 0, 0], vel=10, tspan=30,
+                    intial_constants=[1.19326220e+00, -6.49562030e-06, 1.31230247e+00], c_robust=1, c_response=50,
+                    max_torque=20, max_response=0, min_robust=10)
     print(test)
-    print('Powell at v=5.5')
+    # 5.5 [ 3.44077315e+00 -2.23763598e-06  8.66977482e-02]
+    # 10  [ 1.19326220e+00 -6.49562030e-06  1.31230247e+00]
