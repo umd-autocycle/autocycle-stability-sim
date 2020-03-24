@@ -155,8 +155,8 @@ class GraphPage(tk.Frame):
         self.controldict = {
             1: None,
             2: PDPhi(k_p=5, k_d=8),
-            3: PIDPhi(k_p=1.63382487e+02, k_i=-1.80068408e-06, k_d=1.24084395e+01, max_torque=20),
-            4: PIDPhiInterpolated(0, 0, 0),
+            3: PIDPhi(k_p=64.6405934, k_i=2.0439155, k_d=0.15882259, max_torque=20),
+            4: PIDPhiInterpolated(max_torque=20),
             5: Lyapunov(E3=.1),
             6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064)
         }

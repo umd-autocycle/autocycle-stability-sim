@@ -17,7 +17,7 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
         con = float(metrics.settling_time(results['t'], results['phi'], 0))
         if con > tspan:
             con = (tspan + abs(metrics.overshoot(results['t'], results['phi'], 0)[0])) * c_response
-        #     print('over', (con/c_response) - tspan)
+        #     print('over', (con / c_response) - tspan)
         # else:
         #     print('time', con)
         return con
@@ -32,33 +32,33 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
         return max(func(x)['torque'])
 
     def objective(x):
-        print('iteration:', x)
+        # print('iteration:', x)
         time_obj = (time(x) - max_response)
         # robust_obj = (robust(x) - min_robust) ** 2
         robust_obj = 0
         tor = torque(x)
-        print('max torque:', tor)
-        torque_obj = 0  # 10000 ** (tor - max_torque)
-        return c_response * time_obj + c_robust * robust_obj + torque_obj
+        # print('max torque:', tor)
+        torque_obj = max(0, tor - (max_torque - 2))
+        return c_response * time_obj + c_robust * robust_obj + 10 ** torque_obj
 
-    res = minimize(objective, intial_constants, method='Powell')
-    print(res.success)
+    res = minimize(objective, intial_constants, method='Powell', options={'xtol': 1e-2, 'ftol': 1e-1})
+    # print(res.success)
     return res.x, time(res.x)
 
 
 if __name__ == '__main__':
-    test = optimize(intial_val=[10, 0, 0, 0], vel=15, tspan=60,
-                    intial_constants=[0, 0, 0], c_robust=1, c_response=1e2,
-                    max_torque=20, max_response=0, min_robust=10)
-    print(test)
-    # 5.5 4.34s [ 3.44077315e+00, -2.23763598e-06,  8.66977482e-02] then @100 3.12s [ 8.38025928e+00, -1.32098845e-06,  3.49506937e+00]
-    # 10  29s [ 1.19326220e+00, -6.49562030e-06,  1.31230247e+00] then @100 t 3.36s [ 9.76156844e+00, -9.45659175e-07, -4.11625537e-01]
-    # 11 29.72s [ 1.31204884e+00, -6.51253072e-06,  1.31193448e+00] then @100t 3.84s [ 9.78287177e+00, -8.90521735e-07, -4.15691395e-01]
-    # c_array = []
-    # for v in np.arange(4, 15, .5):
-    #     test = optimize(intial_val=[10, 0, 0, 0], vel=v, tspan=30,
-    #                     intial_constants=[0, 0, 0], c_robust=1, c_response=1e2,
-    #                     max_torque=100, max_response=0, min_robust=10)
-    #     c_array.append(test)
-    #     print(v, test[1])
-    # print(c_array)
+    # test = optimize(intial_val=[10, 0, 0, 0], vel=5.5, tspan=60,
+    #                 intial_constants=[40, .5, 15], c_robust=1, c_response=1e2,
+    #                 max_torque=20, max_response=0, min_robust=10)
+    # print(test)
+
+    c_array = []
+    init_k = [[40, 1.5, 15], ]
+    for v in np.arange(4, 15.5, .5):
+        test = optimize(intial_val=[10, 0, 0, 0], vel=v, tspan=30,
+                        intial_constants=init_k[-1], c_robust=1, c_response=1e2,
+                        max_torque=20, max_response=0, min_robust=10)
+        c_array.append(test)
+        init_k.append(list(test[0]))
+        print(v, test[1])
+    print(c_array)

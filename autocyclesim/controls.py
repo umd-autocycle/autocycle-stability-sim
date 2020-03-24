@@ -38,7 +38,7 @@ class PIDPhi(Control):
 
     def get_control(self, goals):
         def pid_phi(t, e, v):
-            self.integral += e[0] * t - self.last_time
+            self.integral += e[0] * (t - self.last_time)
             self.last_time = t
             return min(self.max_torque,
                        max(-self.max_torque, self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral))
@@ -53,45 +53,49 @@ class PIDPhi(Control):
 class PIDPhiInterpolated(Control):
     integral = 0
     last_time = 0
+    first = 4
+    final = 15
+    interval = 0.5
 
-    def __init__(self, k_p, k_i, k_d):
-        self.k_p = k_p
-        self.k_i = k_i
-        self.k_d = k_d
+    def __init__(self, max_torque):
+        self.max_torque = max_torque
+        self.params = [[33.69352243, 0.263932, 21.15690148],
+                       [101.20843419, 4.4401922, 38.1772637],
+                       [102.20843419, 5.4401922, 37.55922972],
+                       [103.20843419, 5.8221582, 35.94119572],
+                       [102.97236622, 5.96805622, 34.32316172],
+                       [103.97236622, 6.35002222, 32.70512772],
+                       [104.97236622, 6.49592025, 32.08709375],
+                       [104.35433225, 6.18809353, 27.85102572],
+                       [105.35433225, 7.18809353, 27.23299175],
+                       [105.25222667, 7.33399156, 26.61495777],
+                       [105.63419267, 7.21653726, 25.9969238],
+                       [104.61175785, 7.09906907, 25.37888982],
+                       [105.35554416, 7.62693309, 19.40675385],
+                       [103.73751016, 8.00889909, 17.78871985],
+                       [104.73751016, 8.39086509, 17.17068588],
+                       [104.47474016, 8.77283109, 16.5526519],
+                       [105.47474016, 8.15479712, 15.93461793],
+                       [102.25887179, 8.53676312, 14.31658393],
+                       [101.64083781, 8.91872912, 13.69854995],
+                       [102.64083781, 9.30069512, 12.08051595],
+                       [102.02280384, 8.68266114, 11.46248198],
+                       [103.02280384, 9.68266114, 9.84444798],
+                       [104.02280384, 10.68266114, 9.226414]]
 
     def get_control(self, goals):
         def pid_phi(t, e, v):
-            self.integral += e[0] * t - self.last_time
+            self.integral += e[0] * (t - self.last_time)
             self.last_time = t
-            if v < 3:  # 2
-                self.k_p = 79.5
-                self.k_i = 0
-                self.k_d = 155
-            elif 5 > v >= 3:  # 4
-                self.k_p = 230
-                self.k_i = 0
-                self.k_d = 100
-            elif 7 > v >= 5:  # 5.5
-                self.k_p = 295
-                self.k_i = 0
-                self.k_d = 110
-            elif 9 > v >= 7:  # 8
-                self.k_p = 270
-                self.k_i = 0
-                self.k_d = 85
-            elif 11 > v >= 9:  # 10
-                self.k_p = 420
-                self.k_i = 0
-                self.k_d = 90
-            elif 13 > v >= 11:  # 12
-                self.k_p = 485
-                self.k_i = 0
-                self.k_d = 100
-            elif v >= 13:  # 14
-                self.k_p = 2178
-                self.k_i = 0
-                self.k_d = 300
-            return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
+
+            index = int((v - self.first) / self.interval)
+            interpolation = (v - self.first - index * self.interval) / self.interval
+
+            k_p = self.params[index][0] + interpolation * (self.params[index + 1][0] - self.params[index][0])
+            k_i = self.params[index][1] + interpolation * (self.params[index + 1][1] - self.params[index][1])
+            k_d = self.params[index][2] + interpolation * (self.params[index + 1][2] - self.params[index][2])
+
+            return min(self.max_torque, max(-self.max_torque, k_p * e[0] + k_d * e[2] + k_i * self.integral))
 
         return pid_phi
 
