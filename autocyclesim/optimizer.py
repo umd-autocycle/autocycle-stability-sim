@@ -27,24 +27,15 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
     #     return con
 
     def torque(x):
-        results = func(x)
-        range_torque = []
-        controller = PIDPhi(k_p=x[0], k_i=x[1], k_d=x[2], max_torque=max_torque)
-        for i in range(0, np.size(results['phi']) - 1):
-            e = [results['phi'][i], results['delta'][i], results['dphi'][i], results['ddelta'][i]]
-            temp = controller.get_control(goals=None)(t=results['t'][i], e=e, v=vel)
-            range_torque.append(temp)
-        # print('torque', range_torque[0], max(range_torque), range_torque.index(max(range_torque)))
-        con = max(range_torque)
-        return con
+        return max(func(x)['torque'])
 
     def objective(x):
         print('iteration:', x)
         time_obj = (time(x) - max_response)
         # robust_obj = (robust(x) - min_robust) ** 2
         robust_obj = 0
-        # tor = torque(x)
-        # print('torque:', tor)
+        tor = torque(x)
+        print('max torque:', tor)
         torque_obj = 0  # 10000 ** (tor - max_torque)
         return c_response * time_obj + c_robust * robust_obj + torque_obj
 
@@ -54,7 +45,7 @@ def optimize(intial_val, vel, tspan, intial_constants, c_robust, c_response, max
 
 
 if __name__ == '__main__':
-    test = optimize(intial_val=[10, 0, 0, 0], vel=5.5, tspan=30,
+    test = optimize(intial_val=[10, 0, 0, 0], vel=15, tspan=60,
                     intial_constants=[0, 0, 0], c_robust=1, c_response=1e2,
                     max_torque=20, max_response=0, min_robust=10)
     print(test)

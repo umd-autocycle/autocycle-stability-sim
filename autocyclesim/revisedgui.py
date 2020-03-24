@@ -131,14 +131,7 @@ class GraphPage(tk.Frame):
 
         parampacker1.pack()
 
-        self.controldict = {
-            1: None,
-            2: PDPhi(k_p=5, k_d=8),
-            3: PIDPhi(k_p=1.02906348e+01, k_i=-1.40131833e-06, k_d=4.24629299e+00, max_torque=20),
-            4: PIDPhiInterpolated(0, 0, 0),
-            5: Lyapunov(E3=.1),
-            6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064)
-        }
+        self.init_controls()
 
         self.titledict = {
             1: "Uncontrolled",
@@ -152,159 +145,107 @@ class GraphPage(tk.Frame):
         defaultcontrol = None
         defaultperturb = None
 
-        self.create_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel,
+        self.v = tk.IntVar(None, 1)
+        self.control_buttons = tk.Frame(self)
+
+        self.update_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel,
                          defaultcontrol, defaultperturb)
 
-    def create_plot(self, defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel,
-                    defaultcontrol, defaultperturb):
-        self.v = tk.IntVar(None, 1)
-        self.controlbuttons = tk.Frame(self)
+    def init_controls(self):
+        self.controldict = {
+            1: None,
+            2: PDPhi(k_p=5, k_d=8),
+            3: PIDPhi(k_p=1.63382487e+02, k_i=-1.80068408e-06, k_d=1.24084395e+01, max_torque=20),
+            4: PIDPhiInterpolated(0, 0, 0),
+            5: Lyapunov(E3=.1),
+            6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064)
+        }
 
-        self.nocontrol = tk.Radiobutton(self.controlbuttons,
+    def update_plot(self, phi, delta, phi_del, delta_del, time_span, vel_val, control,
+                    perturb):
+        self.control_buttons.pack_forget()
+        self.control_buttons = tk.Frame(self)
+
+        self.nocontrol = tk.Radiobutton(self.control_buttons,
                                         text="Uncontrolled",
                                         padx=20,
                                         variable=self.v,
                                         value=1
                                         ).pack(side=tk.TOP)
-        self.pdcontrol = tk.Radiobutton(self.controlbuttons,
+        self.pdcontrol = tk.Radiobutton(self.control_buttons,
                                         text="PD Controller",
                                         padx=20,
                                         variable=self.v,
                                         value=2).pack(side=tk.TOP)
-        self.pidcontrol = tk.Radiobutton(self.controlbuttons,
+        self.pidcontrol = tk.Radiobutton(self.control_buttons,
                                          text="PID Controller",
                                          padx=20,
                                          variable=self.v,
                                          value=3).pack(side=tk.TOP)
-        self.pidIntercontrol = tk.Radiobutton(self.controlbuttons,
+        self.pidIntercontrol = tk.Radiobutton(self.control_buttons,
                                               text="PID Interpolated Controlled",
                                               padx=20,
                                               variable=self.v,
                                               value=4).pack(side=tk.TOP)
-        self.lyapunov = tk.Radiobutton(self.controlbuttons,
+        self.lyapunov = tk.Radiobutton(self.control_buttons,
                                        text="Lyapunov Controlled",
                                        padx=20,
                                        variable=self.v,
                                        value=5).pack(side=tk.TOP)
-        self.fuzzylyapunov = tk.Radiobutton(self.controlbuttons,
+        self.fuzzylyapunov = tk.Radiobutton(self.control_buttons,
                                             text="Fuzzy Lyapunov Controlled",
                                             padx=20,
                                             variable=self.v,
                                             value=6).pack(side=tk.TOP)
-        self.controlbuttons.pack(side=tk.RIGHT)
+        self.control_buttons.pack(side=tk.RIGHT)
+
+        if hasattr(self, 'canvas'):
+            self.canvas.get_tk_widget().pack_forget()
+            self.canvas._tkcanvas.pack_forget()
+            self.button3.pack_forget()
+            self.button1.pack_forget()
+            self.animateButton.pack_forget()
+            self.toolbar.pack_forget()
+
+        self.button1 = tk.Button(self, text="Back to Home",
+                                 command=lambda: self.controller.show_frame(StartPage))
+        self.button1.pack(side=tk.BOTTOM)
+        self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
+        self.button3 = tk.Button(self, text="Update Graph", command=lambda:
+        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
+                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
+                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
+                         perturb))
+        self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
+        self.animateButton.pack(side=tk.BOTTOM)
+        self.button3.pack(side=tk.BOTTOM)
 
         self.model = MeijaardModel()
-        results = simulate(self.model, (defaultphi, defaultdelta, defaultphidel, defaultdeltadel), defaulttimespan,
-                           defaultvel, control_method=defaultcontrol, perturbation=defaultperturb)
+        self.init_controls()
+        results = simulate(self.model, [phi, delta, phi_del, delta_del], time_span, vel_val,
+                           control_method=control, perturbation=perturb)
 
         st = float(metrics.settling_time(results['t'], results['phi'], 0))
         sth = float(metrics.settling_threshold(results['t'], results['phi'], 0))
         osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
         osv, ost = float(osv), float(ost)
 
-        self.f = generate_figure('Uncontrolled Bicycle at %.2f m/s' % 5.5, (results['t'], 'Time (seconds)'),
-                                 (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
-                                 (st, "Settling time: %.2f" % st, 'v'), (sth, "Settling threshold: %.2f" % sth, 'ph'),
-                                 (ost, "Maximum Overshoot: %.2f" % osv, 'v', osv))
+        if hasattr(self, 'f'):
+            self.f.clear()
 
-        self.canvas = FigureCanvasTkAgg(self.f, self)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
-        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        self.button3 = tk.Button(self, text="Update Graph", command=lambda:
-        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
-                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
-                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
-                         defaultperturb))
-        self.animateButton = tk.Button(self, text="Animate", command = lambda: self.animate())
-
-        self.button1 = tk.Button(self, text="Back to Home",
-                                 command=lambda: self.controller.show_frame(StartPage))
-        self.button1.pack(side=tk.BOTTOM)
-        self.animateButton.pack(side=tk.BOTTOM)
-        self.button3.pack(side=tk.BOTTOM)
-
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
-        self.toolbar.update()
-
-    def update_plot(self, newphi, newdelta, newphidel, newdeltadel, newtimespan, newvelvalue, newcontrol,
-                    defaultperturb):
-        self.controlbuttons.pack_forget()
-        self.controlbuttons = tk.Frame(self)
-
-        self.nocontrol = tk.Radiobutton(self.controlbuttons,
-                                        text="Uncontrolled",
-                                        padx=20,
-                                        variable=self.v,
-                                        value=1
-                                        ).pack(side=tk.TOP)
-        self.pdcontrol = tk.Radiobutton(self.controlbuttons,
-                                        text="PD Controller",
-                                        padx=20,
-                                        variable=self.v,
-                                        value=2).pack(side=tk.TOP)
-        self.pidcontrol = tk.Radiobutton(self.controlbuttons,
-                                         text="PID Controller",
-                                         padx=20,
-                                         variable=self.v,
-                                         value=3).pack(side=tk.TOP)
-        self.pidIntercontrol = tk.Radiobutton(self.controlbuttons,
-                                              text="PID Interpolated Controlled",
-                                              padx=20,
-                                              variable=self.v,
-                                              value=4).pack(side=tk.TOP)
-        self.lyapunov = tk.Radiobutton(self.controlbuttons,
-                                       text="Lyapunov Controlled",
-                                       padx=20,
-                                       variable=self.v,
-                                       value=5).pack(side=tk.TOP)
-        self.fuzzylyapunov = tk.Radiobutton(self.controlbuttons,
-                                            text="Fuzzy Lyapunov Controlled",
-                                            padx=20,
-                                            variable=self.v,
-                                            value=6).pack(side=tk.TOP)
-        self.controlbuttons.pack(side=tk.RIGHT)
-
-        self.canvas.get_tk_widget().pack_forget()
-        self.canvas._tkcanvas.pack_forget()
-        self.button3.pack_forget()
-        self.button1.pack_forget()
-        self.animateButton.pack_forget()
-        self.toolbar.pack_forget()
-        self.button1 = tk.Button(self, text="Back to Home",
-                                 command=lambda: self.controller.show_frame(StartPage))
-        self.button1.pack(side=tk.BOTTOM)
-        self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
-        self.button3 = tk.Button(self, text="Update Graph", command=lambda:
-        self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
-                         float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
-                         float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
-                         defaultperturb))
-        self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
-        self.animateButton.pack(side=tk.BOTTOM)
-        self.button3.pack(side=tk.BOTTOM)
-
-        results = simulate(self.model, [newphi, newdelta, newphidel, newdeltadel], newtimespan, newvelvalue,
-                           control_method=newcontrol, perturbation=defaultperturb)
-
-        st = float(metrics.settling_time(results['t'], results['phi'], 0))
-        sth = float(metrics.settling_threshold(results['t'], results['phi'], 0))
-        osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
-        osv, ost = float(osv), float(ost)
-
-        self.f.clear()
-        self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()], newvelvalue),
+        self.f = generate_figure('%s Bicycle at %.2f m/s' % (self.titledict[self.v.get()], vel_val),
                                  (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
+                                 (results['torque'], 'Torque (N-m)'),
                                  (st, "Settling time: %.2f" % st, 'v'), (sth, "Settling threshold: %.2f" % sth, 'ph'),
                                  (ost, "Maximum Overshoot: %.2f" % osv, 'v', osv))
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
-        self.toolbar.update()
+
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        self.toolbar.update()
 
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 

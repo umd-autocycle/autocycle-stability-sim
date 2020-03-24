@@ -10,6 +10,9 @@ class Control:
 
         return no_control
 
+    def reset_registers(self):
+        pass
+
 
 class PDPhi(Control):
     def __init__(self, k_p, k_d):
@@ -41,6 +44,10 @@ class PIDPhi(Control):
                        max(-self.max_torque, self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral))
 
         return pid_phi
+
+    def reset_registers(self):
+        self.integral = 0
+        self.last_time = 0
 
 
 class PIDPhiInterpolated(Control):
@@ -87,6 +94,10 @@ class PIDPhiInterpolated(Control):
             return self.k_p * e[0] + self.k_d * e[2] + self.k_i * self.integral
 
         return pid_phi
+
+    def reset_registers(self):
+        self.integral = 0
+        self.last_time = 0
 
 
 class Lyapunov(Control):
