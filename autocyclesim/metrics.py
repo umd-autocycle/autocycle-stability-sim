@@ -85,13 +85,17 @@ def robustness(init_parameters, velocity, model, control, timespan):
 
     return ret
 
+
 def robust(init_parameters, velocity, model, control, timespan):
     phi, delta, d_phi, d_delta = init_parameters
     init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta}
     ret = {}
+    results = simulate(model, init_parameters, timespan, velocity, control, None)
+    if settles(results['t'], results['phi'], 0):
+        return {'phi': 0, 'delta': 0, 'd_phi': 0, 'd_delta': 0}
 
     for vary in init_pkg.keys():
-        #find the max
+        # find the max
         start = init_pkg[vary]
         lowbd = start
         upbd = start + 30
@@ -105,7 +109,7 @@ def robust(init_parameters, velocity, model, control, timespan):
             else:
                 upbd = max_var - 1
             max_var = (lowbd + upbd) / 2
-        #find the min
+        # find the min
         upbd = start
         lowbd = start - 30
         min_var = (lowbd + upbd) / 2
@@ -119,11 +123,9 @@ def robust(init_parameters, velocity, model, control, timespan):
                 lowbd = min_var
             min_var = (lowbd + upbd) / 2
 
-        ret[vary] = abs(max_var)-abs(min_var)
+        ret[vary] = abs(max_var) - abs(min_var)
 
     return ret
-
-
 
 
 def max_torque(torque):
