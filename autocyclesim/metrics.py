@@ -61,29 +61,37 @@ def response_time(time, variable, goal):
 
 def robustness(init_parameters, velocity, model, control, timespan):
     phi, delta, d_phi, d_delta = init_parameters
-    init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta, 'velocity': velocity}
-    ret = {}
+    init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta}
+    results = simulate(model, init_parameters, timespan, velocity, control, None)
+    if not settles(results['t'], results['phi'], 0):
+        return 0
+    start = phi
+    # find the max
+    lowbd = start
+    upbd = start + 30
+    max_var = (lowbd + upbd) / 2
+    while (abs(upbd) - abs(lowbd)) > 1e-2:
+       init_parameters = max_var, init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
+       results = simulate(model, init_parameters, timespan, velocity, control, None)
+       if settles(results['t'], results['phi'], 0):
+           lowbd = max_var
+       else:
+            upbd = max_var - 1
+       max_var = (lowbd + upbd) / 2
+    # find the min
+    upbd = start
+    lowbd = start - 30
+    min_var = (lowbd + upbd) / 2
+    while (abs(lowbd) - abs(upbd)) > 1e-2:
+        init_parameters = min_var, init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
+        results = simulate(model, init_parameters, timespan, velocity, control, None)
+        if settles(results['t'], results['phi'], 0):
+            upbd = min_var
+        else:
+            lowbd = min_var
+        min_var = (lowbd + upbd) / 2
 
-    for vary in init_pkg.keys():
-        min_var = init_pkg[vary]
-        max_var = init_pkg[vary] + 30
-        mid = (min_var + max_var) / 2
-
-        while max_var > min_var:
-            init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta, 'velocity': velocity, vary: mid}
-            init_parameters = init_pkg['phi'], init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
-            velocity = init_pkg['velocity']
-
-            results = simulate(model, init_parameters, timespan, velocity, control, None)
-            if settles(results['t'], results['phi'], 0):
-                min_var = mid
-            else:
-                max_var = mid - 1
-            mid = (min_var + max_var) / 2
-
-        ret[vary] = mid
-
-    return ret
+    return max_var - min_var
 
 
 def robust(init_parameters, velocity, model, control, timespan):
@@ -91,7 +99,7 @@ def robust(init_parameters, velocity, model, control, timespan):
     init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta}
     ret = {}
     results = simulate(model, init_parameters, timespan, velocity, control, None)
-    if settles(results['t'], results['phi'], 0):
+    if not settles(results['t'], results['phi'], 0):
         return {'phi': 0, 'delta': 0, 'd_phi': 0, 'd_delta': 0}
 
     for vary in init_pkg.keys():
@@ -100,7 +108,7 @@ def robust(init_parameters, velocity, model, control, timespan):
         lowbd = start
         upbd = start + 30
         max_var = (lowbd + upbd) / 2
-        while (upbd - lowbd) > 1e-4:
+        while (abs(upbd) - abs(lowbd)) > 1e-2:
             init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta, vary: max_var}
             init_parameters = init_pkg['phi'], init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
             results = simulate(model, init_parameters, timespan, velocity, control, None)
@@ -113,7 +121,7 @@ def robust(init_parameters, velocity, model, control, timespan):
         upbd = start
         lowbd = start - 30
         min_var = (lowbd + upbd) / 2
-        while (upbd - lowbd) > 1e-3:
+        while (abs(lowbd) - abs(upbd)) > 1e-2:
             init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta, vary: min_var}
             init_parameters = init_pkg['phi'], init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
             results = simulate(model, init_parameters, timespan, velocity, control, None)
@@ -123,7 +131,7 @@ def robust(init_parameters, velocity, model, control, timespan):
                 lowbd = min_var
             min_var = (lowbd + upbd) / 2
 
-        ret[vary] = abs(max_var) - abs(min_var)
+        ret[vary] = max_var - min_var
 
     return ret
 
