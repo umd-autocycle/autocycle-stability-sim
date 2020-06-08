@@ -49,6 +49,35 @@ class PIDPhi(Control):
         self.integral = 0
         self.last_time = 0
 
+class PIDDelta(Control):
+    integral = 0
+    last_time = 0
+# v = 5.5 [ 4.,  0.03169785, -0.4409042 ]
+# v = 6 [ 7.07133204,  0.06475467, -1.00706603]
+# v = 7 [14.62731783,  0.0930806 , -1.98779757]
+# v = 9 [33.7214239 ,  0.22002286, -3.86885105]
+
+
+
+    def __init__(self, k_p, k_i, k_d, max_torque):
+        self.k_p = k_p
+        self.k_i = k_i
+        self.k_d = k_d
+        self.max_torque = max_torque
+
+    def get_control(self, goals):
+        def pid_phi(t, e, v):
+            self.integral += e[1] * (t - self.last_time)
+            self.last_time = t
+            return min(self.max_torque,
+                       max(-self.max_torque, self.k_p * e[1] + self.k_d * e[3] + self.k_i * self.integral))
+
+        return pid_phi
+
+    def reset_registers(self):
+        self.integral = 0
+        self.last_time = 0
+
 
 class PIDPhiInterpolated(Control):
     integral = 0
