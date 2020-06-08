@@ -250,7 +250,7 @@ class GraphPage(tk.Frame):
         self.canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
     def animate(self):
-        subprocess.call(f"ppython visuals.py {self.phivalue.get()} {self.deltavalue.get()} {self.phidelvalue.get()} "
+        subprocess.call(f"python visuals.py {self.phivalue.get()} {self.deltavalue.get()} {self.phidelvalue.get()} "
                         f"{self.deltadelvalue.get()} {self.timespanvalue.get()} {self.velvalue.get()} "
                         f"{self.controldict[self.v.get()]} {None}")
 

@@ -1,0 +1,1 @@
+BackWh1 defined as wheel held by metal rim at 4 degrees from vertical

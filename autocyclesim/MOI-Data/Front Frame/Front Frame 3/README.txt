@@ -1,0 +1,1 @@
+Front3 is defined to be 37 degrees back of the up-down axis
