@@ -1,7 +1,7 @@
 from numpy import sign
 import time
 from math import sqrt
-import slycot
+import slycot ##this causes a crash
 import control
 import numpy as np
 
