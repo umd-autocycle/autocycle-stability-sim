@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov
+from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, FullStateFeedback, LQR
 import metrics
 
 import matplotlib
@@ -139,7 +139,9 @@ class GraphPage(tk.Frame):
             3: "PID Controlled",
             4: "PID Interpolated Controlled",
             5: "Lyapunov Controlled",
-            6: "Fuzzy Lyapunov Controlled"
+            6: "Fuzzy Lyapunov Controlled",
+            7: "Full Feedback Controlled",
+            8: "Full Feedback Linear Quadratic Regulator Controlled"
         }
 
         defaultcontrol = None
@@ -158,7 +160,9 @@ class GraphPage(tk.Frame):
             3: PIDPhi(k_p=64.6405934, k_i=2.0439155, k_d=0.15882259, max_torque=20),
             4: PIDPhiInterpolated(max_torque=20),
             5: Lyapunov(E3=.1),
-            6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064)
+            6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064),
+            7: FullStateFeedback(eval1=-1,eval2=-2,eval3=-3,eval4=-4),
+            8: LQR(k_phi=1,k_delta=1,k_torque=1)
         }
 
     def update_plot(self, phi, delta, phi_del, delta_del, time_span, vel_val, control,
@@ -196,7 +200,17 @@ class GraphPage(tk.Frame):
                                             text="Fuzzy Lyapunov Controlled",
                                             padx=20,
                                             variable=self.v,
-                                            value=6).pack(side=tk.TOP)
+                                            value=6).pack(side=tk.TOP),
+        self.fullfeedback = tk.Radiobutton(self.control_buttons,
+                                            text="Full Feedback Controlled",
+                                            padx=20,
+                                            variable=self.v,
+                                            value=7).pack(side=tk.TOP),
+        self.lqr = tk.Radiobutton(self.control_buttons,
+                                            text="Full Feedback Linear Quadratic Regulator Controlled",
+                                            padx=20,
+                                            variable=self.v,
+                                            value=8).pack(side=tk.TOP)
         self.control_buttons.pack(side=tk.RIGHT)
 
         if hasattr(self, 'canvas'):
