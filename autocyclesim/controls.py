@@ -26,10 +26,12 @@ class FullStateFeedback(Control):
 
     def get_control(self, goals):
         def fsf(t, e, v):
-            A = np.array([[0, 0, 1, 0], [0, 0, 0, 1], [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
-                          [12.3999, 31.5587 - 2.0423 * v * v, 3.6177 * v, -3.1388 * v]])
-            B = np.array([[0], [0], [-0.1226], [4.265]])
-            K = control.place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
+            if t == 0:
+                A = np.array([[0, 0, 1, 0], [0, 0, 0, 1], [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
+                              [12.3999, 31.5587 - 2.0423 * v * v, 3.6177 * v, -3.1388 * v]])
+                B = np.array([[0], [0], [-0.1226], [4.265]])
+                K = control.place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
+
             e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
             ans = (-K * e_transpose)
             return ans[0, 0]
