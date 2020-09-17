@@ -140,7 +140,7 @@ class GraphPage(tk.Frame):
             4: "PID Interpolated Controlled",
             5: "Lyapunov Controlled",
             6: "Fuzzy Lyapunov Controlled",
-            7: "Full Feedback Controlled",
+            7: "Full Feedback Controled",
             8: "Full Feedback Linear Quadratic Regulator Controlled"
         }
 
