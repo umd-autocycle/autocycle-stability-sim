@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, FullStateFeedback, LQR
+from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, FullStateFeedback, LQR, PIDDelta
 import metrics
+import numpy as np
 
 import matplotlib
 
@@ -129,6 +130,24 @@ class GraphPage(tk.Frame):
         vellabel.pack(padx=5, pady=5, side=tk.RIGHT)
         vel.pack(side=tk.LEFT)
 
+        dphi = tk.Frame(parampacker1, self)
+        self.dphivalue = tk.Entry(dphi)
+        self.dphivalue.insert(tk.END, '0')
+        defaultdphi = float(self.velvalue.get())
+        self.dphivalue.pack(padx=5, pady=5, side=tk.RIGHT)
+        dphilabel = tk.Label(dphi, text="Desired Phi in degrees:")
+        dphilabel.pack(padx=5, pady=5, side=tk.RIGHT)
+        dphi.pack(side=tk.LEFT)
+
+        ddelta = tk.Frame(parampacker1, self)
+        self.ddeltavalue = tk.Entry(ddelta)
+        self.ddeltavalue.insert(tk.END, '0')
+        defaultddelta = float(self.velvalue.get())
+        self.ddeltavalue.pack(padx=5, pady=5, side=tk.RIGHT)
+        ddeltalabel = tk.Label(ddelta, text="Desired Delta in degrees:")
+        ddeltalabel.pack(padx=5, pady=5, side=tk.RIGHT)
+        ddelta.pack(side=tk.LEFT)
+
         parampacker1.pack()
 
         self.init_controls()
@@ -136,12 +155,13 @@ class GraphPage(tk.Frame):
         self.titledict = {
             1: "Uncontrolled",
             2: "PD Controlled",
-            3: "PID Controlled",
+            3: "PID Phi Controlled",
             4: "PID Interpolated Controlled",
             5: "Lyapunov Controlled",
             6: "Fuzzy Lyapunov Controlled",
             7: "Full Feedback Controlled",
-            8: "Full Feedback Linear Quadratic Regulator Controlled"
+            8: "Full Feedback Linear Quadratic Regulator Controlled",
+            9: "PID Delta Controlled"
         }
 
         defaultcontrol = None
@@ -151,7 +171,7 @@ class GraphPage(tk.Frame):
         self.control_buttons = tk.Frame(self)
 
         self.update_plot(defaultphi, defaultdelta, defaultphidel, defaultdeltadel, defaulttimespan, defaultvel,
-                         defaultcontrol, defaultperturb)
+                         defaultcontrol, defaultperturb, defaultdphi, defaultddelta)
 
     def init_controls(self):
         self.controldict = {
@@ -162,11 +182,12 @@ class GraphPage(tk.Frame):
             5: Lyapunov(E3=.1),
             6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064),
             7: FullStateFeedback(eval1=-1, eval2=-2, eval3=-3, eval4=-4),
-            8: LQR(k_phi=1, k_delta=1, k_torque=1)
+            8: LQR(k_phi=1, k_delta=1, k_torque=1),
+            9: PIDDelta(k_p=4.,k_i=0.03169785,k_d=0,max_torque=40)
         }
 
     def update_plot(self, phi, delta, phi_del, delta_del, time_span, vel_val, control,
-                    perturb):
+                    perturb, dphi, ddelta):
         self.control_buttons.pack_forget()
         self.control_buttons = tk.Frame(self)
 
@@ -182,7 +203,7 @@ class GraphPage(tk.Frame):
                                         variable=self.v,
                                         value=2).pack(side=tk.TOP)
         self.pidcontrol = tk.Radiobutton(self.control_buttons,
-                                         text="PID Controller",
+                                         text="PID Phi Controller",
                                          padx=20,
                                          variable=self.v,
                                          value=3).pack(side=tk.TOP)
@@ -211,6 +232,11 @@ class GraphPage(tk.Frame):
                                   padx=20,
                                   variable=self.v,
                                   value=8).pack(side=tk.TOP)
+        self.piddelta = tk.Radiobutton(self.control_buttons,
+                                  text="PID Delta Controller",
+                                  padx=20,
+                                  variable=self.v,
+                                  value=9).pack(side=tk.TOP)
         self.control_buttons.pack(side=tk.RIGHT)
 
         if hasattr(self, 'canvas'):
@@ -229,7 +255,7 @@ class GraphPage(tk.Frame):
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
                          float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
-                         perturb))
+                         perturb, float(self.dphivalue.get()),float(self.ddeltavalue.get())))
         self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
         self.animateButton.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
@@ -237,10 +263,12 @@ class GraphPage(tk.Frame):
         self.model = MeijaardModel()
         self.init_controls()
         results = simulate(self.model, [phi, delta, phi_del, delta_del], time_span, vel_val,
-                           control_method=control, perturbation=perturb)
+                           control_method=control, perturbation=perturb,goal=np.radians([dphi, ddelta]))
 
-        st = float(metrics.settling_time(results['t'], results['phi'], 0))
-        sth = float(metrics.settling_threshold(results['t'], results['phi'], 0))
+        stphi = float(metrics.settling_time(results['t'], results['phi'], dphi))
+        stdelta = float(metrics.settling_time(results['t'], results['delta'], ddelta))
+        sthphi = float(metrics.settling_threshold(results['t'], results['phi'], dphi))
+        sthdelta = float(metrics.settling_threshold(results['t'], results['delta'], ddelta))
         osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
         osv, ost = float(osv), float(ost)
 
@@ -251,8 +279,8 @@ class GraphPage(tk.Frame):
                                  (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
                                  (results['torque'], 'Torque (N-m)'),
-                                 (st, "Settling time: %.2f" % st, 'v'), (sth, "Settling threshold: %.2f" % sth, 'ph'),
-                                 (ost, "Maximum Overshoot: %.2f" % osv, 'v', osv))
+                                 (stphi, "Phi Settling time: %.2f" % stphi, 'v'), (stdelta, "Delta Settling time: %.2f" % stdelta, 'v'), (sthphi, "Phi Settling threshold: %.2f" % sthphi, 'ph'),
+                                 (sthdelta, "Delta Settling threshold: %.2f" % sthdelta, 'ph'), (ost, "Maximum Phi Overshoot: %.2f" % osv, 'v', osv))
 
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()

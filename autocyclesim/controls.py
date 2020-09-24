@@ -1,8 +1,8 @@
 from numpy import sign
 import time
 from math import sqrt
-import slycot  ##this causes a crash
-import control
+from metrics import lqr
+from control import place
 import numpy as np
 
 
@@ -24,15 +24,18 @@ class FullStateFeedback(Control):
         self.eval3 = eval3
         self.eval4 = eval4
 
+
     def get_control(self, goals):
+        self.desiredPhi = goals[0]
+        self.desiredDelta = goals[1]
         def fsf(t, e, v):
             if t == 0:
                 A = np.array([[0, 0, 1, 0], [0, 0, 0, 1], [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
                               [12.3999, 31.5587 - 2.0423 * v * v, 3.6177 * v, -3.1388 * v]])
                 B = np.array([[0], [0], [-0.1226], [4.265]])
-                self.K = control.place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
+                self.K = place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
 
-            e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
+            e_transpose = np.array([[e[0]-self.desiredPhi], [e[1]-self.desiredDelta], [e[2]], [e[3]]])
             ans = (-self.K * e_transpose)
             return ans[0, 0]
 
@@ -41,20 +44,20 @@ class FullStateFeedback(Control):
 
 class LQR(Control):
     def __init__(self, k_phi, k_delta, k_torque):
-        self.Q = np.array([[k_phi, 0, 0, 0], [0, k_delta, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        self.Q = np.array([[k_phi, 0, 0, 0], [0, k_delta, 0, 0], [0, 0, 10, 0], [0, 0, 0, 10]])
         self.R = np.array([k_torque])
 
     def get_control(self, goals):
-        def lqr(t, e, v):
-            A = np.array([[0, 0, 1, 0], [0, 0, 0, 1], [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
-                          [12.3999, 31.5587 - 2.0423 * v * v, 3.6177 * v, -3.1388 * v]])
-            B = np.array([[0], [0], [-0.1226], [4.265]])
-            K, S, E = control.lqr(A, B, self.Q, self.R)
+        def lqr_func(t, e, v):
+            if t >= 0:
+                A = np.array([[0, 0, 1, 0], [0, 0, 0, 1], [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
+                              [12.3999, 31.5587 - 2.0423 * v * v, 3.6177 * v, -3.1388 * v]])
+                B = np.array([[0], [0], [-0.1226], [4.265]])
+                self.K, S, E = lqr(A,B,self.Q,self.R)
             e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
-            ans = (-K * e_transpose)
-            return ans[0, 0]
-
-        return lqr
+            ans = (-1*self.K * e_transpose)
+            return ans[0,0]
+        return lqr_func
 
 
 class PDPhi(Control):
@@ -109,13 +112,13 @@ class PIDDelta(Control):
         self.max_torque = max_torque
 
     def get_control(self, goals):
-        def pid_phi(t, e, v):
-            self.integral += e[1] * (t - self.last_time)
+        def pid_delta(t, e, v):
+            self.integral += (e[1]-goals[1]) * (t - self.last_time)
             self.last_time = t
             return min(self.max_torque,
-                       max(-self.max_torque, self.k_p * e[1] + self.k_d * e[3] + self.k_i * self.integral))
+                       max(-self.max_torque, self.k_p * (e[1]-goals[1]) + self.k_d * e[3] + self.k_i * self.integral))
 
-        return pid_phi
+        return pid_delta
 
     def reset_registers(self):
         self.integral = 0

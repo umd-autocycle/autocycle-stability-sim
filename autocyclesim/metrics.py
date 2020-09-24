@@ -1,5 +1,7 @@
 from math import inf as infinity
 from simulation import simulate
+import numpy as np
+import scipy.linalg
 
 THRESHOLD = 0.001
 
@@ -59,13 +61,47 @@ def response_time(time, variable, goal):
     return time[-1]
 
 
-def robustness(init_parameters, velocity, model, control, timespan):
+def robustness_phi(init_parameters, velocity, model, control, timespan):
     phi, delta, d_phi, d_delta = init_parameters
     init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta}
     results = simulate(model, init_parameters, timespan, velocity, control, None)
     if not settles(results['t'], results['phi'], 0):
         return 0
     start = phi
+    # find the max
+    lowbd = start
+    upbd = start + 30
+    max_var = (lowbd + upbd) / 2
+    while (abs(upbd) - abs(lowbd)) > 1e-2:
+       init_parameters = max_var, init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
+       results = simulate(model, init_parameters, timespan, velocity, control, None)
+       if settles(results['t'], results['phi'], 0):
+           lowbd = max_var
+       else:
+            upbd = max_var - 1
+       max_var = (lowbd + upbd) / 2
+    # find the min
+    upbd = start
+    lowbd = start - 30
+    min_var = (lowbd + upbd) / 2
+    while (abs(lowbd) - abs(upbd)) > 1e-2:
+        init_parameters = min_var, init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
+        results = simulate(model, init_parameters, timespan, velocity, control, None)
+        if settles(results['t'], results['phi'], 0):
+            upbd = min_var
+        else:
+            lowbd = min_var
+        min_var = (lowbd + upbd) / 2
+
+    return max_var - min_var
+
+def robustness_delta(init_parameters, velocity, model, control, timespan,goals):
+    phi, delta, d_phi, d_delta = init_parameters
+    init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta}
+    results = simulate(model, init_parameters, timespan, velocity, control, None,goal=goals)
+    if not settles(results['t'], results['delta'], goals[1]):
+        return 0
+    start = ################################continue here
     # find the max
     lowbd = start
     upbd = start + 30
@@ -134,6 +170,43 @@ def robust(init_parameters, velocity, model, control, timespan):
         ret[vary] = max_var - min_var
 
     return ret
+
+
+
+
+
+def lqr(A, B, Q, R):
+    """Solve the continuous time lqr controller.
+
+    dx/dt = A x + B u
+
+    cost = integral x.T*Q*x + u.T*R*u
+    """
+
+
+# ref Bertsekas, p.151
+
+# first, try to solve the ricatti equation
+    X = np.array(scipy.linalg.solve_continuous_are(A, B, Q, R))
+
+# compute the LQR gain
+    print((B.T * X))
+    #K = scipy.linalg.inv(R) * (B.T * X)
+    K = (B.T * X)
+
+    eigVals, eigVecs = scipy.linalg.eig(A - B * K)
+    print(eigVals)
+    return K, X, eigVals
+
+
+def dlqr(A, B, Q, R):
+
+    X = np.matrix(scipy.linalg.solve_discrete_are(A, B, Q, R))
+
+    K = np.matrix(scipy.linalg.inv(B.T * X * B + R) * (B.T * X * A))
+
+    eigVals, eigVecs = scipy.linalg.eig(A - B * K)
+    return K, X, eigVals
 
 
 def max_torque(torque):
