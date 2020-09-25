@@ -7,7 +7,7 @@ THRESHOLD = 0.001
 
 
 def settling_threshold(time, variable, goal):
-    return abs(variable[0] - goal) * 0.02
+    return abs(max(variable[0],1) - goal) * 0.02
 
 
 def settling_time(time, variable, goal):
@@ -28,7 +28,7 @@ def settles(time, variable, goal):
     does not account well for oscillating behavior, need more sophisticated approach
     """
     threshold = settling_threshold(time, variable, goal)
-    return abs(variable[-1] - goal) < threshold
+    return abs(variable[-1] - goal) <= threshold
 
 
 def overshoot(time, variable, goal):
@@ -64,7 +64,7 @@ def response_time(time, variable, goal):
 def robustness_phi(init_parameters, velocity, model, control, timespan):
     phi, delta, d_phi, d_delta = init_parameters
     init_pkg = {'phi': phi, 'delta': delta, 'd_phi': d_phi, 'd_delta': d_delta}
-    results = simulate(model, init_parameters, timespan, velocity, control, None)
+    results = simulate(model, init_parameters, timespan, velocity, control, None,None)
     if not settles(results['t'], results['phi'], 0):
         return 0
     start = phi
@@ -74,7 +74,7 @@ def robustness_phi(init_parameters, velocity, model, control, timespan):
     max_var = (lowbd + upbd) / 2
     while (abs(upbd) - abs(lowbd)) > 1e-2:
        init_parameters = max_var, init_pkg['delta'], init_pkg['d_phi'], init_pkg['d_delta']
-       results = simulate(model, init_parameters, timespan, velocity, control, None)
+       results = simulate(model, init_parameters, timespan, velocity, control, None,None)
        if settles(results['t'], results['phi'], 0):
            lowbd = max_var
        else:
@@ -101,7 +101,7 @@ def robustness_delta(init_parameters, velocity, model, control, timespan,goals):
     results = simulate(model, init_parameters, timespan, velocity, control, None,goal=goals)
     if not settles(results['t'], results['delta'], goals[1]):
         return 0
-    start = ################################continue here
+    ################################continue here  start =
     # find the max
     lowbd = start
     upbd = start + 30
