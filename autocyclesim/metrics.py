@@ -195,7 +195,7 @@ def lqr(A, B, Q, R):
     K = (B.T * X)
 
     eigVals, eigVecs = scipy.linalg.eig(A - B * K)
-    print(eigVals)
+    #print(eigVals)
     return K, X, eigVals
 
 
