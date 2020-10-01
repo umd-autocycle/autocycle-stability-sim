@@ -1,0 +1,4 @@
+[submodule "BezierAutocycle"]
+	path = BezierAutocycle
+	url = https://github.com/AndoniSanguesa/BezierAutocycle.git
+	branch = static_model
