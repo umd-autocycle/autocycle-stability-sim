@@ -4,25 +4,25 @@ import re
 class BezierDeltas:
     s = Symbol.symbols('s')
 
-    def read_curve(self, st):
-        if ()
-
     def get_deltas(self):
+        phi_sym = Symbol.symbols('phi')
         curve = open("../BezierAutocycle/output_data.txt", "r")
-        matchcase = re.match('Matrix\(\[\[([\S]*)\],\[([\S]*)\]\]\)', curve.read().replace(" ", ""))
-        curve_parametrized = [self.read_curve(matchcase.group(1)), self.read_curve(matchcase.group(2))]
+        matchcase = re.match('Matrix\(\[\[([\S]*)\],\s\[([\S]*)\]\]\)', curve.read())
+        curve_parametrized = [eval(matchcase.group(1)), eval(matchcase.group(2))]
 
         curve_deltas = [[], []]
-        for i in [1, 1.1, 0.01]:
+        step = 0.01  # decrease step size for greater precision
+        for i in [1, 1 + step, step]:
             curve_deltas[100 * i][0] = curve_parametrized[0].subs(self.s, i)
-            curve_deltas[100 * i][1] = wheelbase * cos(lean_angle) /\
+            curve_deltas[100 * i][1] = wheelbase * cos(phi_sym) / \
                                        (cos(caster_angle) *
                                         (((Derivative(curve_parametrized[0], self.s).subs(self.s, i) ** 2 +
-                                           Derivative(curve_parametrized[0], self.s).subs(self.s, i) ** 2) ** (3 / 2)) /
+                                           Derivative(curve_parametrized[1], self.s).subs(self.s, i) ** 2) ** (3 / 2)) /
                                          abs(Derivative(curve_parametrized[0], self.s).subs(self.s, i) *
-                                             Derivative(Derivative(curve_parametrized[1], self.s), self.s).subs(self.s, i) -
+                                             Derivative(Derivative(curve_parametrized[1], self.s), self.s).subs(self.s,
+                                                                                                                i) -
                                              Derivative(curve_parametrized[1], self.s).subs(self.s, i) *
-                                             Derivative(Derivative(curve_parametrized[0], self.s), self.s).subs(self.s, i)
-                                             )))
+                                             Derivative(Derivative(curve_parametrized[0], self.s), self.s).subs(self.s,
+                                                                                                                i))))
 
-        return curve_parametrized
+        return curve_deltas
