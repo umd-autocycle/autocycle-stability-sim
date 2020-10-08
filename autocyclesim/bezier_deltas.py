@@ -14,8 +14,8 @@ class BezierDeltas:
         step = 0.01  # decrease step size for greater precision
         for i in [1, 1 + step, step]:
             curve_deltas[100 * i][0] = curve_parametrized[0].subs(self.s, i)
-            curve_deltas[100 * i][1] = wheelbase * cos(phi_sym) / \
-                                       (cos(caster_angle) *
+            curve_deltas[100 * i][1] = 1.02 * cos(phi_sym) / \
+                                       (cos(0.08) *
                                         (((Derivative(curve_parametrized[0], self.s).subs(self.s, i) ** 2 +
                                            Derivative(curve_parametrized[1], self.s).subs(self.s, i) ** 2) ** (3 / 2)) /
                                          abs(Derivative(curve_parametrized[0], self.s).subs(self.s, i) *
