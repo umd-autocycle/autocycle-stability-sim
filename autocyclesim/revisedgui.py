@@ -245,12 +245,15 @@ class GraphPage(tk.Frame):
             self.button3.pack_forget()
             self.button1.pack_forget()
             self.animateButton.pack_forget()
+            self.pathButton.pack_forget()
             self.toolbar.pack_forget()
 
         self.button1 = tk.Button(self, text="Back to Home",
                                  command=lambda: self.controller.show_frame(StartPage))
         self.button1.pack(side=tk.BOTTOM)
         self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
+        self.pathButton = tk.Button(self, text="Create Path", command=lambda: self.create_path())
+        self.pathButton.pack(side=tk.BOTTOM)
         self.button3 = tk.Button(self, text="Update Graph", command=lambda:
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
@@ -295,6 +298,9 @@ class GraphPage(tk.Frame):
         subprocess.call(f"python visuals.py {self.phivalue.get()} {self.deltavalue.get()} {self.phidelvalue.get()} "
                         f"{self.deltadelvalue.get()} {self.timespanvalue.get()} {self.velvalue.get()} "
                         f"{self.controldict[self.v.get()]} {None}")
+
+    def create_path(self):
+        subprocess.call("python ../BezierAutocycle/GUI.py")
 
 
 class InfoPage(tk.Frame):
