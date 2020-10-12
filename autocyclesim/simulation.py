@@ -6,7 +6,7 @@ import controls
 
 
 # initial conditions and return in degrees
-def simulate(bike_model, initial_conditions, length, velocity, control_method, perturbation,goal):
+def simulate(bike_model, initial_conditions, length, velocity, control_method, perturbation, goal):
     if control_method is None:
         control_method = controls.Control()
     initial_conditions = [radians(x) for x in initial_conditions]
