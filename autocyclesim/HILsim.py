@@ -4,10 +4,10 @@ import numpy as np
 
 
 class HILsim:
-    def __init__(self, state_vector):  # [phi, delta, dphi, ddelta]
+    def __init__(self, state_vector):
         self.state_vector = state_vector
 
-    def apply_torque(self, torque, v):
+    def get_sensor_readings(self, torque, v):
         a = np.array([[0, 0, 1, 0],
                       [0, 0, 0, 1],
                       [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
@@ -22,6 +22,8 @@ class HILsim:
                             xdot[0] + xdot[2] * t, xdot[1] + xdot[3] * t]
         self.state_vector = new_state_vector
 
-        # use the new state vector to output theoretical sensor readings (need to find which sensors to use)
-        # turn angle sensor, X, Y, Z, acceleration
-        return sensor_readings
+        # use the new state vector to output theoretical sensor readings
+        x =
+        y =
+        z = xdot[2] / np.sin(self.state_vector[0])
+        return [x, y, z, v, self.state_vector[1]]
