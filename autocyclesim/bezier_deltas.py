@@ -1,5 +1,7 @@
 from sympy import *
+import numpy as np
 import re
+
 
 class BezierDeltas:
     s = Symbol.symbols('s')
@@ -12,23 +14,22 @@ class BezierDeltas:
 
         curve_deltas = [[], []]
         step = 0.01  # decrease step size for greater precision
-        for i in [step, 1 + step, step]:
-            curve_deltas[i / step - 1][0] = curve_parametrized[0].subs(self.s, i)
-            curve_deltas[i / step - 1][1] = 1.02 * cos(phi_sym) / \
-                                       (cos(0.08) *
-                                        (((Derivative(curve_parametrized[0], self.s).subs(self.s, i) ** 2 +
-                                           Derivative(curve_parametrized[1], self.s).subs(self.s, i) ** 2) ** (3 / 2)) /
-                                         abs(Derivative(curve_parametrized[0], self.s).subs(self.s, i) *
-                                             Derivative(Derivative(curve_parametrized[1], self.s), self.s).subs(self.s,
-                                                                                                                i) -
-                                             Derivative(curve_parametrized[1], self.s).subs(self.s, i) *
-                                             Derivative(Derivative(curve_parametrized[0], self.s), self.s).subs(self.s,
-                                                                                                                i))))
+        for i in np.arange(step, 1 + step, step):
+            curve_deltas[0].append(curve_parametrized[0].subs(self.s, i))
+            curve_deltas[1].append(1.02 * cos(phi_sym) /
+                                   (cos(0.08) *
+                                    (((Derivative(curve_parametrized[0], self.s).subs(self.s, i) ** 2 +
+                                       Derivative(curve_parametrized[1], self.s).subs(self.s, i) ** 2) ** (3 / 2)) /
+                                     abs(Derivative(curve_parametrized[0], self.s).subs(self.s, i) *
+                                         Derivative(Derivative(curve_parametrized[1], self.s), self.s).subs(self.s, i) -
+                                         Derivative(curve_parametrized[1], self.s).subs(self.s, i) *
+                                         Derivative(Derivative(curve_parametrized[0], self.s), self.s).subs(self.s,
+                                                                                                            i)))))
 
         return curve_deltas
 
-        #uncomment code below for a single delta for use in the dynamic system, and comment out for-loop above
-        #return 1.02 * cos(phi_sym) / (cos(0.08) * (((Derivative(curve_parametrized[0], self.s).subs(self.s, 0) ** 2 +
+        # uncomment code below for a single delta for use in the dynamic system, and comment out for-loop above
+        # return 1.02 * cos(phi_sym) / (cos(0.08) * (((Derivative(curve_parametrized[0], self.s).subs(self.s, 0) ** 2 +
         #                                      Derivative(curve_parametrized[1], self.s).subs(self.s, 0) ** 2) **
         #                                     (3 / 2)) / abs(Derivative(curve_parametrized[0], self.s).subs(self.s, 0) *
         #                                                    Derivative(Derivative(curve_parametrized[1], self.s),
