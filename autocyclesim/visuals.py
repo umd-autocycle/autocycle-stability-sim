@@ -20,7 +20,8 @@ class Visuals(ShowBase):
                controls.Lyapunov(E3=.1) if sys.argv[7] == "<controls.Lyapunov" else
                controls.FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064))
     results = simulation.simulate(bikemodel.MeijaardModel(), np.array(sys.argv[1:5]).astype(np.float),
-                                  float(sys.argv[5]), float(sys.argv[6]), control_method=control, perturbation=None)
+                                  float(sys.argv[5]), float(sys.argv[6]), control_method=control, perturbation=None,
+                                  goal=None)
     """ results = simulation.simulate(bikemodel.MeijaardModel(), [10, 0, 0, 0], 60, 5.5, control_method=None,
                                   perturbation=None) """
     v = float(sys.argv[6])
