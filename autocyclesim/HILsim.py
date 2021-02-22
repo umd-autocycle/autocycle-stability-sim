@@ -9,7 +9,7 @@ class HILsim:
     def __init__(self, state_vector):
         self.state_vector = state_vector
         self.t = 1 / 20
-        self.r_ao = [1, 1]
+        self.r_ao = 0.1  # will come later
 
     def get_sensor_readings(self, v):
         ser = serial.Serial('COM6', 115200, timeout=0)  # will only work if speeds are capped
@@ -21,10 +21,10 @@ class HILsim:
                              self.state_vector[1] + xdot[1] * self.t + 1 / 2 * xdot[3] * self.t ** 2,
                              xdot[0] + xdot[2] * self.t, xdot[1] + xdot[3] * self.t]
 
-        # use the new state vector to output theoretical sensor readings
+        # use the new state vector to output theoretical sensor readings (assume positive x is forward, y is left, z is up)
         x_accel = 0
-        y_accel = xdot[2] * self.r_ao[0] + 9.8 * np.cos(self.state_vector[0])
-        z_accel = -self.state_vector[2] * self.r_ao[1] - 9.8 * np.sin(self.state_vector[0])
+        y_accel = -self.state_vector[2] * self.r_ao * np.sin(self.state_vector[0]) - 9.8 * np.sin(self.state_vector[0])
+        z_accel = xdot[2] * self.r_ao * np.cos(self.state_vector[0]) + 9.8 * np.cos(self.state_vector[0])
         x_gyro = self.state_vector[2]
         y_gyro = 0
         z_gyro = v * self.state_vector[1] * np.cos(0.08) / (1.02 * np.cos(self.state_vector[0]))
