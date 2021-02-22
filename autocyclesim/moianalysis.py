@@ -1,65 +1,47 @@
-from scipy.fftpack import fft
-from math import pi
-import matplotlib.pyplot as plt
+from math import pi, radians, cos, sin
+import pandas as pd
 import numpy as np
-import re
-
-n = 3
-tests = {
-    "Back Frame": 3,
-    "Back Wheel": 1,
-    "Front Frame": 3,
-    "Front Wheel": 1,
-}
 
 mois = {}
 
 
-def moi_m(freq):
-    T = 1 / freq
-    G = 75e9
-    d = 0.009525
-    l = 1.055
-    I_P = pi / 2 * ((d / 2) ** 4)
+def moi_m(period, rigidity, d, length):
+    polar_area_moment = pi / 2 * ((d / 2) ** 4)
 
-    return (T / (2 * pi)) ** 2 * (G * I_P / l)
+    return (period / (2 * pi)) ** 2 * (rigidity * polar_area_moment / length)
 
 
 if __name__ == '__main__':
+    frame = pd.read_csv('MOI-Data/NewMoIData.tsv', sep='\t')
+    print(frame)
 
-    for component, num_tests in tests.items():
-        mois[component] = []
+    frame.transform({
+        'Angle from Axis to Horizontal': lambda x: radians(float(x)),
+        'Angle from Axis to Forward': lambda x: radians(float(x)),
+        'Rod Length': lambda x: float(x),
+        'Rod Rigidity': lambda x: float(x),
+        'Rod Diameter': lambda x: float(x),
+        'Period': lambda x: float(x)
+    })
 
-        for position in range(1, num_tests + 1):
-            mois[component].append([])
+    for i, subset in frame.groupby('Component'):
+        coeff_rows = []
+        measured_moi = []
 
-            for test_num in range(1, 4):
-                with open('MOI-Data/%s/%s %d/%s %d-%d.txt' % (
-                        component, component, position, component, position, test_num), 'r') as f:
-                    x = f.readlines()
+        for j, row in subset.iterrows():
+            theta = row['Angle from Axis to Horizontal']
+            psi = row['Angle from Axis to Forward']
+            axis = np.array([cos(theta) * cos(psi), sin(psi), sin(theta) * cos(psi)])
 
-                x = [[int(z) for z in y.strip().split()] for y in x[:-1]]
-                x = [[y[k] - y[k + 3] for y in x] for k in range(len(x[0]) // 2)]
-                x = [[d - np.mean(y) for d in y] for y in x]
+            p = row['Period']
+            r = row['Rod Rigidity']
+            diam = row['Rod Diameter']
+            long = row['Rod Length']
 
-                N = len(x[0])
-                T = .25
-                fs = 1 / T
+            coeff_rows.append([axis[0] ** 2, axis[1] ** 2, axis[2] ** 2, 2 * axis[0] * axis[2]])
+            measured_moi.append(moi_m(p, r, diam, long))
 
-                y = fft(x[0])
-                y = 2.0 / N * np.abs(y[1:N // 2])
-                y[0:10] = 0
-                xf = np.linspace(0.0, N // 2 - 1, N // 2)[1:]
-                xf = fs / N * xf
+        big_matrix = np.array(coeff_rows)
+        mois = np.array(measured_moi)
 
-                fig, ax = plt.subplots()
-                ax.plot(xf, y)
-                ax.set_title('%s %d-%d' % (component, position, test_num))
-                ax.set_xlabel('Frequency (Hz)')
-                ax.set_ylabel('Magnitude')
-
-                mois[component][position - 1].append(xf[np.argmax(y)])
-
-            mois[component][position - 1] = np.mean(mois[component][position - 1])
-
-    print(mois)
+        i_xx, i_yy, i_zz, i_xz = np.linalg.solve(big_matrix, mois)
