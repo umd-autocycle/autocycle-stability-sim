@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, FullStateFeedback, LQR, PIDDelta
+from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, PIDDelta
+    # FullStateFeedback, LQR, \
+
 import metrics
 import numpy as np
 
@@ -176,13 +178,13 @@ class GraphPage(tk.Frame):
     def init_controls(self):
         self.controldict = {
             1: None,
-            2: PDPhi(k_p=5, k_d=8),
-            3: PIDPhi(k_p=64.6405934, k_i=2.0439155, k_d=0.15882259, max_torque=20),
+            2: PDPhi(k_p=60, k_d=45),
+            3: PIDPhi(k_p=30, k_i=15, k_d=30, max_torque=20),
             4: PIDPhiInterpolated(max_torque=20),
             5: Lyapunov(E3=.1),
             6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064),
-            7: FullStateFeedback(-180.2797086,   -10.618034 ,  -48.25945338,  -10.381966),
-            8: LQR(k_phi=1, k_delta=1, k_torque=1),
+            # 7: FullStateFeedback(-180.2797086,   -10.618034 ,  -48.25945338,  -10.381966),
+            # 8: LQR(k_phi=1, k_delta=1, k_torque=1),
             9: PIDDelta(k_p= 7.47147503,k_i=  0.51375069 ,k_d=-1.236068,max_torque=40)
         }
 
@@ -266,12 +268,12 @@ class GraphPage(tk.Frame):
         self.model = MeijaardModel()
         self.init_controls()
         results = simulate(self.model, [phi, delta, phi_del, delta_del], time_span, vel_val,
-                           control_method=control, perturbation=perturb,goal=np.radians([dphi, ddelta]))
+                           control_method=control, perturbation=perturb,goal=np.radians([0, 0]))
 
-        stphi = float(metrics.settling_time(results['t'], results['phi'], dphi))
-        stdelta = float(metrics.settling_time(results['t'], results['delta'], ddelta))
-        sthphi = float(metrics.settling_threshold(results['t'], results['phi'], dphi))
-        sthdelta = float(metrics.settling_threshold(results['t'], results['delta'], ddelta))
+        stphi = float(metrics.settling_time(results['t'], np.radians(results['phi']), 0))
+        stdelta = float(metrics.settling_time(results['t'], results['delta'], 0))
+        sthphi = float(metrics.settling_threshold(results['t'], results['phi'], 0))
+        sthdelta = float(metrics.settling_threshold(results['t'], results['delta'], 0))
         osv, ost = metrics.overshoot(results['t'], results['phi'], 0)
         osv, ost = float(osv), float(ost)
 

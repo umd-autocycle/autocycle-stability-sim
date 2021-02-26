@@ -8,34 +8,34 @@ class BikeModel:
 
 
 class MeijaardModel(BikeModel):
-    w = 1.02
-    t = 0.08
-    alpha = atan(3.0)
+    w = 1.16
+    t = 0.09
+    alpha = 1.319
     g = 9.81
 
-    r_rw = 0.3
-    m_rw = 2.0
-    A = np.array([0.06, 0.12, 0.06])
+    r_rw = 0.35
+    m_rw = 3.30
+    A = np.array([0.177, 0.354, 0.177])
 
-    x_rf, y_rf, z_rf = 0.3, 0, -0.9
-    m_rf = 85.0
+    x_rf, y_rf, z_rf = 0.40, 0, -.605
+    m_rf = 28.65
     B = np.array([
-        [9.2, 0, 2.4],
-        [0, 11, 0],
-        [2.4, 0, 2.8],
+        [3.124, 0, -0.877],
+        [0, 4.150, 0],
+        [-0.877, 0, 3.398],
     ])
 
-    x_ff, y_ff, z_ff = 0.9, 0, -0.7
-    m_ff = 4.0
+    x_ff, y_ff, z_ff = 0.92, 0, -0.835
+    m_ff = 3.05
     C = np.array([
-        [0.0546, 0, -0.0162],
-        [0, 0.06, 0],
-        [-0.0162, 0, 0.0114],
+        [0.344, 0, 0.0637],
+        [0, 0.239, 0],
+        [0.0637, 0, 0.0578],
     ])
 
     r_fw = 0.35
-    m_fw = 3.0
-    D = np.array([0.14, 0.28, 0.14])
+    m_fw = 2.90
+    D = np.array([0.177, 0.354, 0.177])
 
     def linearized_1st_order(self, v, h):
         m_t = self.m_rw + self.m_rf + self.m_ff + self.m_fw

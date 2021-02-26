@@ -7,7 +7,7 @@ THRESHOLD = 0.001
 
 
 def settling_threshold(time, variable, goal):
-    return abs(max(variable[0],1) - goal) * 0.02
+    return abs(variable[0] - goal) * 0.02
 
 
 def settling_time(time, variable, goal):

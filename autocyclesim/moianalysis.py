@@ -15,14 +15,12 @@ if __name__ == '__main__':
     frame = pd.read_csv('MOI-Data/NewMoIData.tsv', sep='\t')
     print(frame)
 
-    frame.transform({
-        'Angle from Axis to Horizontal': lambda x: radians(float(x)),
-        'Angle from Axis to Forward': lambda x: radians(float(x)),
-        'Rod Length': lambda x: float(x),
-        'Rod Rigidity': lambda x: float(x),
-        'Rod Diameter': lambda x: float(x),
-        'Period': lambda x: float(x)
-    })
+    frame['Angle from Axis to Horizontal'] = frame['Angle from Axis to Horizontal'].apply(lambda x: radians(float(x)))
+    frame['Angle from Axis to Forward'] = frame['Angle from Axis to Forward'].apply(lambda x: radians(float(x)))
+    frame['Rod Length'] = frame['Rod Length'].apply(lambda x: float(x))
+    frame['Rod Rigidity'] = frame['Rod Rigidity'].apply(lambda x: float(x))
+    frame['Rod Diameter'] = frame['Rod Diameter'].apply(lambda x: float(x))
+    frame['Period'] = frame['Period'].apply(lambda x: float(x))
 
     for i, subset in frame.groupby('Component'):
         coeff_rows = []
@@ -31,7 +29,7 @@ if __name__ == '__main__':
         for j, row in subset.iterrows():
             theta = row['Angle from Axis to Horizontal']
             psi = row['Angle from Axis to Forward']
-            axis = np.array([cos(theta) * cos(psi), sin(psi), sin(theta) * cos(psi)])
+            axis = np.array([cos(theta) * cos(psi), sin(psi), -sin(theta) * cos(psi)])
 
             p = row['Period']
             r = row['Rod Rigidity']
@@ -45,3 +43,5 @@ if __name__ == '__main__':
         mois = np.array(measured_moi)
 
         i_xx, i_yy, i_zz, i_xz = np.linalg.solve(big_matrix, mois)
+        print(i)
+        print(i_xx, i_yy, i_zz, i_xz)
