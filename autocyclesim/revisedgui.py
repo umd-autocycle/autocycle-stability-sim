@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, PIDDelta
-    # FullStateFeedback, LQR, \
-
+from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, PIDDelta, FullStateFeedback, LQR, \
+    FSFFirmware
 import metrics
 import numpy as np
 
@@ -116,7 +115,7 @@ class GraphPage(tk.Frame):
 
         timespan = tk.Frame(parampacker1, self)
         self.timespanvalue = tk.Entry(timespan)
-        self.timespanvalue.insert(tk.END, '60')
+        self.timespanvalue.insert(tk.END, '15')
         defaulttimespan = float(self.timespanvalue.get())
         self.timespanvalue.pack(padx=5, pady=5, side=tk.RIGHT)
         timespanlabel = tk.Label(timespan, text="Time-span (seconds):")
@@ -125,7 +124,7 @@ class GraphPage(tk.Frame):
 
         vel = tk.Frame(parampacker1, self)
         self.velvalue = tk.Entry(vel)
-        self.velvalue.insert(tk.END, '5.5')
+        self.velvalue.insert(tk.END, '4')
         defaultvel = float(self.velvalue.get())
         self.velvalue.pack(padx=5, pady=5, side=tk.RIGHT)
         vellabel = tk.Label(vel, text="Velocity in m/s:")
@@ -152,6 +151,7 @@ class GraphPage(tk.Frame):
 
         parampacker1.pack()
 
+        self.model = MeijaardModel()
         self.init_controls()
 
         self.titledict = {
@@ -179,13 +179,14 @@ class GraphPage(tk.Frame):
         self.controldict = {
             1: None,
             2: PDPhi(k_p=60, k_d=45),
-            3: PIDPhi(k_p=30, k_i=15, k_d=30, max_torque=20),
+            3: PIDPhi(k_p=30, k_i=15, k_d=30, max_torque=8),
             4: PIDPhiInterpolated(max_torque=20),
             5: Lyapunov(E3=.1),
             6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064),
-            # 7: FullStateFeedback(-180.2797086,   -10.618034 ,  -48.25945338,  -10.381966),
-            # 8: LQR(k_phi=1, k_delta=1, k_torque=1),
-            9: PIDDelta(k_p= 7.47147503,k_i=  0.51375069 ,k_d=-1.236068,max_torque=40)
+            7: FSFFirmware(self.model, 8, -2, -3, -4, -5),
+            # 7: FullStateFeedback(-2, -3, -4, -5),
+            8: LQR(k_phi=10, k_delta=1, k_dphi=3, k_ddelta=2.5, k_torque=1),
+            9: PIDDelta(k_p=7.47147503, k_i=0.51375069, k_d=-1.236068, max_torque=40)
         }
 
     def update_plot(self, phi, delta, phi_del, delta_del, time_span, vel_val, control,
@@ -235,10 +236,10 @@ class GraphPage(tk.Frame):
                                   variable=self.v,
                                   value=8).pack(side=tk.TOP)
         self.piddelta = tk.Radiobutton(self.control_buttons,
-                                  text="PID Delta Controller",
-                                  padx=20,
-                                  variable=self.v,
-                                  value=9).pack(side=tk.TOP)
+                                       text="PID Delta Controller",
+                                       padx=20,
+                                       variable=self.v,
+                                       value=9).pack(side=tk.TOP)
         self.control_buttons.pack(side=tk.RIGHT)
 
         if hasattr(self, 'canvas'):
@@ -260,7 +261,7 @@ class GraphPage(tk.Frame):
         self.update_plot(float(self.phivalue.get()), float(self.deltavalue.get()),
                          float(self.phidelvalue.get()), float(self.deltadelvalue.get()),
                          float(self.timespanvalue.get()), float(self.velvalue.get()), self.controldict[self.v.get()],
-                         perturb, float(self.dphivalue.get()),float(self.ddeltavalue.get())))
+                         perturb, float(self.dphivalue.get()), float(self.ddeltavalue.get())))
         self.animateButton = tk.Button(self, text="Animate", command=lambda: self.animate())
         self.animateButton.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
@@ -268,7 +269,7 @@ class GraphPage(tk.Frame):
         self.model = MeijaardModel()
         self.init_controls()
         results = simulate(self.model, [phi, delta, phi_del, delta_del], time_span, vel_val,
-                           control_method=control, perturbation=perturb,goal=np.radians([0, 0]))
+                           control_method=control, perturbation=perturb, goal=np.radians([0, 0]))
 
         stphi = float(metrics.settling_time(results['t'], np.radians(results['phi']), 0))
         stdelta = float(metrics.settling_time(results['t'], results['delta'], 0))
@@ -284,8 +285,11 @@ class GraphPage(tk.Frame):
                                  (results['t'], 'Time (seconds)'),
                                  (results['phi'], 'Phi (degrees)'), (results['delta'], 'Delta (degrees)'),
                                  (results['torque'], 'Torque (N-m)'),
-                                 (stphi, "Phi Settling time: %.2f" % stphi, 'v'), (stdelta, "Delta Settling time: %.2f" % stdelta, 'v'), (sthphi, "Phi Settling threshold: %.2f" % sthphi, 'ph'),
-                                 (sthdelta, "Delta Settling threshold: %.2f" % sthdelta, 'ph'), (ost, "Maximum Phi Overshoot: %.2f" % osv, 'v', osv))
+                                 (stphi, "Phi Settling time: %.2f" % stphi, 'v'),
+                                 (stdelta, "Delta Settling time: %.2f" % stdelta, 'v'),
+                                 (sthphi, "Phi Settling threshold: %.2f" % sthphi, 'ph'),
+                                 (sthdelta, "Delta Settling threshold: %.2f" % sthdelta, 'ph'),
+                                 (ost, "Maximum Phi Overshoot: %.2f" % osv, 'v', osv))
 
         self.canvas = FigureCanvasTkAgg(self.f, self)
         self.canvas.draw()

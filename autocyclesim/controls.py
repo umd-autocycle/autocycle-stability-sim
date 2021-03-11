@@ -1,9 +1,14 @@
 from numpy import sign
 import time
 from math import sqrt
-#import slycot  ##this causes a crash
-# import control
+import slycot  ##this causes a crash
+import control
 import numpy as np
+
+from bikemodel import MeijaardModel
+
+model = MeijaardModel()
+model.linearized_1st_order(4, [None, None])
 
 
 class Control:
@@ -17,44 +22,125 @@ class Control:
         pass
 
 
-# class FullStateFeedback(Control):
-#     def __init__(self, eval1, eval2, eval3, eval4):
-#         self.eval1 = eval1
-#         self.eval2 = eval2
-#         self.eval3 = eval3
-#         self.eval4 = eval4
-#
-#     def get_control(self, goals):
-#         def fsf(t, e, v):
-#             if t == 0:
-#                 A = np.array([[0, 0, 1, 0], [0, 0, 0, 1], [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
-#                               [12.3999, 31.5587 - 2.0423 * v * v, 3.6177 * v, -3.1388 * v]])
-#                 B = np.array([[0], [0], [-0.1226], [4.265]])
-#                 self.K = control.place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
-#
-#             e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
-#             ans = (-self.K * e_transpose)
-#             return ans[0, 0]
-#
-#         return fsf
+class FullStateFeedback(Control):
+    def __init__(self, eval1, eval2, eval3, eval4):
+        self.eval1 = eval1
+        self.eval2 = eval2
+        self.eval3 = eval3
+        self.eval4 = eval4
+
+    def get_control(self, goals):
+        def fsf(t, e, v):
+            if t == 0:
+                start = time.time()
+                A = np.concatenate(
+                    (np.concatenate((np.zeros((2, 2)), np.dot(-1 * model.m_inv, (model.k0 + model.k2 * (v ** 2)))),
+                                    axis=0),
+                     np.concatenate((np.eye(2), np.dot(-1 * model.m_inv, model.c1 * v)), axis=0)), axis=1)
+                B = (np.concatenate((np.zeros((2, 2)), model.m_inv), axis=0)[:, 1])[..., None]
+                self.K = control.place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
+                end = time.time()
+
+                print(self.K)
+                # print(end - start)
+
+            e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
+            ans = (-self.K * e_transpose)
+            # print(ans[0,0])
+            return ans[0, 0]
+
+        return fsf
 
 
-# class LQR(Control):
-#     def __init__(self, k_phi, k_delta, k_torque):
-#         self.Q = np.array([[k_phi, 0, 0, 0], [0, k_delta, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-#         self.R = np.array([k_torque])
-# 
-#     def get_control(self, goals):
-#         def lqr(t, e, v):
-#             A = np.array([[0, 0, 1, 0], [0, 0, 0, 1], [9.4702, -0.5888 - 0.8868 * v * v, -0.104 * v, -0.3277 * v],
-#                           [12.3999, 31.5587 - 2.0423 * v * v, 3.6177 * v, -3.1388 * v]])
-#             B = np.array([[0], [0], [-0.1226], [4.265]])
-#             K, S, E = control.lqr(A, B, self.Q, self.R)
-#             e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
-#             ans = (-K * e_transpose)
-#             return ans[0, 0]
-#
-#         return lqr
+class FSFFirmware(Control):
+    def __init__(self, bike_model, torque_max, l1, l2, l3, l4):
+        self.model = bike_model
+        self.torque_max = torque_max
+
+        self.l1 = l1
+        self.l2 = l2
+        self.l3 = l3
+        self.l4 = l4
+
+        self.M_det = np.linalg.det(bike_model.m)
+        self.C1_det = np.linalg.det(bike_model.c1)
+        self.K0_det = np.linalg.det(bike_model.k0)
+        self.K2_det = np.linalg.det(bike_model.k2)
+        self.C1_M_det = np.linalg.det(bike_model.c1 - bike_model.m)
+        self.K2_M_det = np.linalg.det(bike_model.k2 - bike_model.m)
+        self.K0_M_det = np.linalg.det(bike_model.k0 - bike_model.m)
+        self.C1_K2_det = np.linalg.det(bike_model.c1 - bike_model.k2)
+        self.C1_K0_det = np.linalg.det(bike_model.c1 - bike_model.k0)
+        self.K0_K2_det = np.linalg.det(bike_model.k0 - bike_model.k2)
+
+    def get_control(self, goals):
+        def fsf(t, e, v):
+            start = time.time()
+            LHS = np.array([
+                [self.Qk1(self.l1, v), self.Qk2(self.l1, v), self.Qk3(self.l1, v), self.Qk4(self.l1, v)],
+                [self.Qk1(self.l2, v), self.Qk2(self.l2, v), self.Qk3(self.l2, v), self.Qk4(self.l2, v)],
+                [self.Qk1(self.l3, v), self.Qk2(self.l3, v), self.Qk3(self.l3, v), self.Qk4(self.l3, v)],
+                [self.Qk1(self.l4, v), self.Qk2(self.l4, v), self.Qk3(self.l4, v), self.Qk4(self.l4, v)],
+            ])
+            RHS = np.array([
+                [-self.RHSe(self.l1, v)],
+                [-self.RHSe(self.l2, v)],
+                [-self.RHSe(self.l3, v)],
+                [-self.RHSe(self.l4, v)]
+            ])
+
+            K = np.dot(np.linalg.inv(LHS), RHS)
+            end = time.time()
+            # print(end - start)
+            # print(K)
+            # print(np.dot(K.T, np.array(e).T))
+
+            return -(np.dot(K.T, np.array(e).T))[0]
+
+        return fsf
+
+    def Qk1(self, l, v):
+        return -(self.model.m[0, 1] * l * l + self.model.c1[0, 1] * l * v + self.model.k2[0, 1] * v * v + self.model.k0[
+            0, 1])
+
+    def Qk2(self, l, v):
+        return self.model.m[0, 0] * l * l + self.model.c1[0, 0] * l * v + self.model.k2[0, 0] * v * v + self.model.k0[
+            0, 0]
+
+    def Qk3(self, l, v):
+        return -(self.model.m[0, 1] * l * l + self.model.c1[0, 1] * l * v + self.model.k2[0, 1] * v * v + self.model.k0[
+            0, 1]) * l
+
+    def Qk4(self, l, v):
+        return (self.model.m[0, 0] * l * l + self.model.c1[0, 0] * l * v + self.model.k2[0, 0] * v * v + self.model.k0[
+            0, 0]) * l
+
+    def RHSe(self, l, v):
+        return l * l * l * l * self.M_det + l * l * l * v * (self.C1_det + self.M_det - self.C1_M_det) + \
+               l * l * v * v * (self.C1_det + self.M_det + self.K2_det - self.K2_M_det) \
+               + l * l * (self.K0_det + self.M_det - self.K0_M_det) + l * v * v * v * (
+                       self.C1_det + self.K2_det - self.C1_K2_det) \
+               + l * v * (self.C1_det + self.K0_det - self.C1_K0_det) + v * v * v * v * self.K2_det \
+               + v * v * (self.K0_det + self.K2_det - self.K0_K2_det) + self.K0_det
+
+
+class LQR(Control):
+    def __init__(self, k_phi, k_delta, k_dphi, k_ddelta, k_torque):
+        self.Q = np.array([[k_phi, 0, 0, 0], [0, k_delta, 0, 0], [0, 0, k_dphi, 0], [0, 0, 0, k_ddelta]])
+        self.R = np.array([k_torque])
+
+    def get_control(self, goals):
+        def lqr(t, e, v):
+            A = np.concatenate(
+                (np.concatenate((np.zeros((2, 2)), np.dot(-1 * model.m_inv, (model.k0 + model.k2 * (v ** 2)))), axis=0),
+                 np.concatenate((np.eye(2), np.dot(-1 * model.m_inv, model.c1 * v)), axis=0)), axis=1)
+            B = (np.concatenate((np.zeros((2, 2)), model.m_inv), axis=0)[:, 1])[..., None]
+            K, S, E = control.lqr(A, B, self.Q, self.R)
+            e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
+            ans = (-K * e_transpose)
+            return ans[0, 0]
+
+        return lqr
 
 
 class PDPhi(Control):

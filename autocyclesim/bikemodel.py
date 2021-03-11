@@ -37,7 +37,7 @@ class MeijaardModel(BikeModel):
     m_fw = 2.90
     D = np.array([0.177, 0.354, 0.177])
 
-    def linearized_1st_order(self, v, h):
+    def __init__(self):
         m_t = self.m_rw + self.m_rf + self.m_ff + self.m_fw
         x_t = (self.x_rf * self.m_rf + self.x_ff * self.m_ff + self.w * self.m_fw) / m_t
         z_t = (-self.r_rw * self.m_rw + self.z_rf * self.m_rf
@@ -78,53 +78,60 @@ class MeijaardModel(BikeModel):
 
         s_u = m_f * u + f * m_t * x_t
 
-        m = np.array([
+        self.m = np.array([
             [t_xx, f_lx + f * t_xz],
             [f_lx + f * t_xz, f_ll + 2 * f * f_lz + f ** 2 * t_zz],
         ])
 
-        k0 = np.array([
+        self.k0 = np.array([
             [self.g * m_t * z_t, -self.g * s_u],
             [-self.g * s_u, -self.g * s_u * sin(lam)],
         ])
 
-        k2 = np.array([
+        self.k2 = np.array([
             [0, (s_t - m_t * z_t) * cos(lam) / self.w],
             [0, (s_u + s_f * sin(lam)) * cos(lam) / self.w],
         ])
 
-        c1 = np.array([
+        self.c1 = np.array([
             [0, f * s_t + s_f * cos(lam) + t_xz * cos(lam) / self.w - f * m_t * z_t],
             [-(f * s_t + s_f * cos(lam)), f_lz * cos(lam) / self.w + f * (s_u + t_zz * cos(lam) / self.w)],
         ])
+        self.m_inv = np.linalg.inv(self.m)
 
-        '''
+    def linearized_1st_order(self, v, h):
+        """
         e0 = phi
         e1 = delta
         e2 = phi'
         e3 = delta'
-        
+
         so
-        
+
         e0' = e2
         e1' = e3
         e2' = phi''
         e3' = delta''
-        '''
-        m_inv = np.linalg.inv(m)
+        """
+
+        self.Amatrix = np.concatenate(
+            (np.concatenate((np.zeros((2, 2)), np.dot(-1 * self.m_inv, (self.k0 + self.k2 * (v ** 2)))), axis=0),
+             np.concatenate((np.eye(2), np.dot(-1 * self.m_inv, self.c1 * v)), axis=0)), axis=1)
+
+        self.Bmatrix = np.concatenate((np.zeros((2, 2)), self.m_inv), axis=0)
 
         def sd(t, e):
             # print(f_lx)
             # print(f)
             # print(t_xz)
             # print(m)
-            # print(k0)
-            # print(k2)
-            # print(c1)
+            # print(self.k0)
+            # print(self.k2)
+            # print(self.c1)
             g = np.array([0.0 if h[0] is None else (h[0])(t, e, v), 0.0 if h[1] is None else (h[1])(t, e, v)])
             q = np.array([e[0], e[1]])
             q_dot = np.array([e[2], e[3]])
-            q_ddot = np.dot(m_inv, g - np.dot(v * c1, q_dot) - np.dot((k0 + k2 * (v ** 2)), q))
+            q_ddot = np.dot(self.m_inv, g - np.dot(v * self.c1, q_dot) - np.dot((self.k0 + self.k2 * (v ** 2)), q))
 
             return [
                 q_dot[0],
@@ -134,3 +141,28 @@ class MeijaardModel(BikeModel):
             ]
 
         return sd
+
+
+if __name__ == '__main__':
+    model = MeijaardModel()
+
+    vv = np.linspace(0, 10, 200)
+    eek = []
+
+    import matplotlib.pyplot as plt
+
+    for v in vv:
+        model.linearized_1st_order(v, [None, None])
+        eig_val, eig_vec = np.linalg.eig(model.Amatrix)
+
+        eek.append(eig_val)
+
+    eek = np.array(eek)
+
+    plt.plot(vv, eek[:, 3], '.', label="e1")
+    plt.plot(vv, eek[:, 2], '.', label="e2")
+    plt.plot(vv, eek[:, 1], '.', label="e3")
+    plt.plot(vv, eek[:, 0], '.', label="e4")
+    plt.axline((0, 0), (10, 0))
+    plt.legend()
+    plt.show()
