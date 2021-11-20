@@ -10,7 +10,7 @@ def simulate(bike_model, initial_conditions, length, velocity, control_method, p
     if control_method is None:
         control_method = controls.Control()
     initial_conditions = [radians(x) for x in initial_conditions]
-    t_eval = np.arange(0, length, 0.01)
+    t_eval = np.arange(0, length, 0.02)
     f = np.array([perturbation, control_method.get_control(goals=goal)])
     results = solve_ivp(bike_model.linearized_1st_order(velocity, f), [0, length], initial_conditions, t_eval=t_eval)
 

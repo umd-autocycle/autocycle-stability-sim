@@ -17,13 +17,47 @@ class MeijaardModel(BikeModel):
     m_rw = 3.30
     A = np.array([0.177, 0.354, 0.177])
 
-    x_rf, y_rf, z_rf = 0.40, 0, -.605
-    m_rf = 28.65
-    B = np.array([
+    # Rear frame parameters
+    x_arf = 0.4
+    y_arf = 0
+    z_arf = -0.605
+
+    m_arf = 28.65
+    B_arf = np.array([
         [3.124, 0, -0.877],
         [0, 4.150, 0],
-        [-0.877, 0, 3.398],
+        [-0.877, 0, 3.398, ]
     ])
+
+    # ZSS Parameters
+    x_zss = 0
+    y_zss = 0
+    z_zss = -0.45  # GUESS
+
+    m_zss = 6.352
+    B_zss = np.array([
+        [0.223, -0.045, -0.001],
+        [-0.045, 0.252, 0.002],
+        [-0.001, 0.002, 0.473]
+    ])
+
+    com_arf = np.array([x_arf, y_arf, z_arf])
+    com_zss = np.array([x_zss, y_zss, z_zss])
+    com_arf = com_arf.reshape((3, 1))
+    com_zss = com_zss.reshape((3, 1))
+
+    # Combine ZSS and Rear Frame MOI, COM, and Mass
+    m_rf = m_arf + m_zss
+    com_rf = (com_arf * m_arf + com_zss * m_zss) / m_rf
+    d_zss = com_zss - com_rf
+    d_arf = com_arf - com_rf
+    dd_zss = np.identity(3) * np.linalg.norm(d_zss) * np.linalg.norm(d_zss) - d_zss @ d_zss.T
+    dd_arf = np.identity(3) * np.linalg.norm(d_arf) * np.linalg.norm(d_arf) - d_arf @ d_arf.T
+    B = B_arf + B_zss + dd_arf * m_arf + dd_zss * m_zss
+
+    x_rf = com_rf[0, 0]
+    y_rf = com_rf[1, 0]
+    z_rf = com_rf[2, 0]
 
     x_ff, y_ff, z_ff = 0.92, 0, -0.835
     m_ff = 3.05
@@ -37,7 +71,16 @@ class MeijaardModel(BikeModel):
     m_fw = 2.90
     D = np.array([0.177, 0.354, 0.177])
 
-    def __init__(self):
+    def __init__(self, zss):
+        if not zss:
+            self.x_rf, self.y_rf, self.z_rf = 0.40, 0, -.605
+            self.m_rf = 28.65
+            self.B = np.array([
+                [3.124, 0, -0.877],
+                [0, 4.150, 0],
+                [-0.877, 0, 3.398],
+            ])
+
         m_t = self.m_rw + self.m_rf + self.m_ff + self.m_fw
         x_t = (self.x_rf * self.m_rf + self.x_ff * self.m_ff + self.w * self.m_fw) / m_t
         z_t = (-self.r_rw * self.m_rw + self.z_rf * self.m_rf
@@ -114,11 +157,9 @@ class MeijaardModel(BikeModel):
         e3' = delta''
         """
 
-        self.Amatrix = np.concatenate(
-            (np.concatenate((np.zeros((2, 2)), np.dot(-1 * self.m_inv, (self.k0 + self.k2 * (v ** 2)))), axis=0),
-             np.concatenate((np.eye(2), np.dot(-1 * self.m_inv, self.c1 * v)), axis=0)), axis=1)
+        self.Amatrix = self.dynamics_matrix(v, True)
 
-        self.Bmatrix = np.concatenate((np.zeros((2, 2)), self.m_inv), axis=0)
+        self.Bmatrix = self.controls_matrix(v, True)
 
         def sd(t, e):
             # print(f_lx)
@@ -142,11 +183,56 @@ class MeijaardModel(BikeModel):
 
         return sd
 
+    def dynamics_matrix(self, v, free_running):
+        if free_running:
+            return np.concatenate(
+                (np.concatenate((np.zeros((2, 2)), np.dot(-1 * self.m_inv, (self.k0 + self.k2 * (v ** 2)))), axis=0),
+                 np.concatenate((np.eye(2), np.dot(-1 * self.m_inv, self.c1 * v)), axis=0)), axis=1)
+        else:
+            return np.concatenate(
+                (np.concatenate((np.zeros((2, 2)), np.zeros((2, 2))), axis=0),
+                 np.concatenate((np.eye(2), np.zeros((2, 2))), axis=0)), axis=1)
+
+    def controls_matrix(self, v, free_running):
+        if free_running:
+            return np.concatenate((np.zeros((2, 2)), self.m_inv), axis=0)
+        else:
+            return np.concatenate((np.zeros((2, 2)), np.zeros((2, 2))), axis=0)
+
+    def kalman_transition_matrix(self, v, dt, free_running):
+        return np.identity(4) + self.dynamics_matrix(v, free_running) * dt
+
+    def kalman_controls_matrix(self, v, dt, free_running):
+        return self.controls_matrix(v, free_running) * dt
+
+    def controllable(self, v):
+        A = self.dynamics_matrix(v, True)
+        B = self.controls_matrix(v, True)
+
+        n = A.shape[0]
+
+        Ct = np.zeros((n, 2 * n))
+        for k in range(0, n-1, 2):
+            Ct[:, k:(k+2)] = np.linalg.matrix_power(A, k - 1) @ B
+
+        return np.linalg.matrix_rank(Ct) == n
+
 
 if __name__ == '__main__':
-    model = MeijaardModel()
+    model = MeijaardModel(zss=True)
+    model.m = np.array([[26.67504339, 1.21856943],
+                        [1.21856943, 0.59438128]])
+    model.c1 = np.array([[0., 4.97370516],
+                         [-0.98015773, 2.43085255]])
+    model.k0 = np.array([[-210.6481775, 1.14387605],
+                         [1.14387605, 3.2817143]])
+    model.k2 = np.array([[0., 21.88145723],
+                         [0., -0.86196881]])
+    model.m_inv = np.linalg.inv(model.m)
 
-    vv = np.linspace(0, 10, 200)
+    print(model.controllable(4))
+
+    vv = np.linspace(0, 8, 400)
     eek = []
 
     import matplotlib.pyplot as plt
@@ -154,15 +240,19 @@ if __name__ == '__main__':
     for v in vv:
         model.linearized_1st_order(v, [None, None])
         eig_val, eig_vec = np.linalg.eig(model.Amatrix)
+        eig_val = sorted(eig_val, key=np.real)
 
         eek.append(eig_val)
 
     eek = np.array(eek)
 
-    plt.plot(vv, eek[:, 3], '.', label="e1")
-    plt.plot(vv, eek[:, 2], '.', label="e2")
-    plt.plot(vv, eek[:, 1], '.', label="e3")
-    plt.plot(vv, eek[:, 0], '.', label="e4")
-    plt.axline((0, 0), (10, 0))
-    plt.legend()
+    plt.plot(vv, eek[:, 3], '-r', label="e1", )
+    plt.plot(vv, eek[:, 2], '-r', label="e2")
+    plt.plot(vv, eek[:, 1], '-r', label="e3")
+    plt.plot(vv, eek[:, 0], '-r', label="e4")
+    plt.axline((0, 0), (8, 0))
+    plt.xlabel('Bicycle Velocity (m/s)')
+    plt.ylabel('Eigenvalue Real Part (1/s)')
+    plt.title('Dynamics Matrix Eigenvalues vs. Velocity')
+    # plt.legend()
     plt.show()

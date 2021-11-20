@@ -7,8 +7,9 @@ import numpy as np
 
 from bikemodel import MeijaardModel
 
-model = MeijaardModel()
-model.linearized_1st_order(4, [None, None])
+
+# model = MeijaardModel()
+# model.linearized_1st_order(4, [None, None])
 
 
 class Control:
@@ -23,21 +24,22 @@ class Control:
 
 
 class FullStateFeedback(Control):
-    def __init__(self, eval1, eval2, eval3, eval4):
+    def __init__(self, bike_model, eval1, eval2, eval3, eval4):
         self.eval1 = eval1
         self.eval2 = eval2
         self.eval3 = eval3
         self.eval4 = eval4
+        self.model = bike_model
 
     def get_control(self, goals):
         def fsf(t, e, v):
             if t == 0:
                 start = time.time()
                 A = np.concatenate(
-                    (np.concatenate((np.zeros((2, 2)), np.dot(-1 * model.m_inv, (model.k0 + model.k2 * (v ** 2)))),
+                    (np.concatenate((np.zeros((2, 2)), np.dot(-1 * self.model.m_inv, (self.model.k0 + self.model.k2 * (v ** 2)))),
                                     axis=0),
-                     np.concatenate((np.eye(2), np.dot(-1 * model.m_inv, model.c1 * v)), axis=0)), axis=1)
-                B = (np.concatenate((np.zeros((2, 2)), model.m_inv), axis=0)[:, 1])[..., None]
+                     np.concatenate((np.eye(2), np.dot(-1 * self.model.m_inv, self.model.c1 * v)), axis=0)), axis=1)
+                B = (np.concatenate((np.zeros((2, 2)), self.model.m_inv), axis=0)[:, 1])[..., None]
                 self.K = control.place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
                 end = time.time()
 
@@ -50,6 +52,10 @@ class FullStateFeedback(Control):
             return ans[0, 0]
 
         return fsf
+
+# class FromData(Control):
+#     def __init__(self, data):
+#         self.data = data
 
 
 class FSFFirmware(Control):
@@ -94,7 +100,8 @@ class FSFFirmware(Control):
             # print(end - start)
             # print(K)
             # print(np.dot(K.T, np.array(e).T))
-
+            # print(np.array(e).T)
+            # print(np.array(e).T + np.random.normal(0, 0.01, 4))
             return -(np.dot(K.T, np.array(e).T))[0]
 
         return fsf

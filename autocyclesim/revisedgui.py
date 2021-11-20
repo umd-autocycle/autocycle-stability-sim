@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, PIDDelta, FullStateFeedback, LQR, \
-    FSFFirmware
+from controls import PIDPhi, PDPhi, PIDPhiInterpolated, Lyapunov, FuzzyLyapunov, PIDDelta, LQR, \
+    FSFFirmware, FullStateFeedback
 import metrics
 import numpy as np
 
@@ -151,7 +151,19 @@ class GraphPage(tk.Frame):
 
         parampacker1.pack()
 
-        self.model = MeijaardModel()
+        self.model = MeijaardModel(zss=True)
+        self.model.m = np.array([[26.67504339, 1.21856943],
+                                 [1.21856943, 0.59438128]])
+        self.model.c1 = np.array([[0., 4.97370516],
+                                  [-0.98015773, 2.43085255]])
+        self.model.k0 = np.array([[-210.6481775, 1.14387605],
+                                  [1.14387605, 3.2817143]])
+        self.model.k2 = np.array([[0., 21.88145723],
+                                  [0., -0.86196881]])
+        self.model.m_inv = np.linalg.inv(self.model.m)
+
+        # self.control_model = MeijaardModel(zss=True)
+        self.control_model = self.model
         self.init_controls()
 
         self.titledict = {
@@ -183,8 +195,8 @@ class GraphPage(tk.Frame):
             4: PIDPhiInterpolated(max_torque=20),
             5: Lyapunov(E3=.1),
             6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064),
-            7: FSFFirmware(self.model, 8, -2, -3, -4, -5),
-            # 7: FullStateFeedback(-2, -3, -4, -5),
+            7: FSFFirmware(self.control_model, 8, -2, -3, -4, -5),
+            # 7: FullStateFeedback(self.control_model, -2, -3, -4, -5),
             8: LQR(k_phi=10, k_delta=1, k_dphi=3, k_ddelta=2.5, k_torque=1),
             9: PIDDelta(k_p=7.47147503, k_i=0.51375069, k_d=-1.236068, max_torque=40)
         }
@@ -266,7 +278,18 @@ class GraphPage(tk.Frame):
         self.animateButton.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
 
-        self.model = MeijaardModel()
+        self.model = MeijaardModel(zss=True)
+        self.model.m = np.array([[26.67504339, 1.21856943],
+                                 [1.21856943, 0.59438128]])
+        self.model.c1 = np.array([[0., 4.97370516],
+                                  [-0.98015773, 2.43085255]])
+        self.model.k0 = np.array([[-210.6481775, 1.14387605],
+                                  [1.14387605, 3.2817143]])
+        self.model.k2 = np.array([[0., 21.88145723],
+                                  [0., -0.86196881]])
+        self.model.m_inv = np.linalg.inv(self.model.m)
+        # self.control_model = MeijaardModel(zss=True)
+        self.control_model = self.model
         self.init_controls()
         results = simulate(self.model, [phi, delta, phi_del, delta_del], time_span, vel_val,
                            control_method=control, perturbation=perturb, goal=np.radians([0, 0]))
