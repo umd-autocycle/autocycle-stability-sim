@@ -12,7 +12,7 @@ def simulate(bike_model, initial_conditions, length, velocity, control_method, p
     initial_conditions = [radians(x) for x in initial_conditions]
     t_eval = np.arange(0, length, 0.02)
     f = np.array([perturbation, control_method.get_control(goals=goal)])
-    results = solve_ivp(bike_model.linearized_1st_order(velocity, f), [0, length], initial_conditions, t_eval=t_eval)
+    results = solve_ivp(bike_model.linearized_1st_order(velocity, f), [0, length], initial_conditions, t_eval=t_eval, method='RK23')
 
     torque = []
     control_method.reset_registers()

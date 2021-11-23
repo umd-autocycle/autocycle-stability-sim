@@ -212,22 +212,30 @@ class MeijaardModel(BikeModel):
         n = A.shape[0]
 
         Ct = np.zeros((n, 2 * n))
-        for k in range(0, n-1, 2):
-            Ct[:, k:(k+2)] = np.linalg.matrix_power(A, k - 1) @ B
+        for k in range(0, n - 1, 2):
+            Ct[:, k:(k + 2)] = np.linalg.matrix_power(A, k - 1) @ B
 
         return np.linalg.matrix_rank(Ct) == n
 
 
 if __name__ == '__main__':
     model = MeijaardModel(zss=True)
-    model.m = np.array([[26.67504339, 1.21856943],
-                        [1.21856943, 0.59438128]])
-    model.c1 = np.array([[0., 4.97370516],
-                         [-0.98015773, 2.43085255]])
-    model.k0 = np.array([[-210.6481775, 1.14387605],
-                         [1.14387605, 3.2817143]])
-    model.k2 = np.array([[0., 21.88145723],
-                         [0., -0.86196881]])
+    # model.m = np.array([[26.67504339, 1.21856943],
+    #                     [1.21856943, 0.59438128]])
+    # model.c1 = np.array([[0., 4.97370516],
+    #                      [-0.98015773, 2.43085255]])
+    # model.k0 = np.array([[-210.6481775, 1.14387605],
+    #                      [1.14387605, 3.2817143]])
+    # model.k2 = np.array([[0., 21.88145723],
+    #                      [0., -0.86196881]])
+    model.m = np.array([[25.85787748, 3.01165364],
+                        [3.01165364, 1.26449286]])
+    model.c1 = np.array([[0., -5.22756539],
+                         [-2.8038681, 6.39286875]])
+    model.k0 = np.array([[-299.99330839, -39.87777003],
+                         [-39.87777003, -91.3247599]])
+    model.k2 = np.array([[0., 24.31064651],
+                         [0., 7.08526457]])
     model.m_inv = np.linalg.inv(model.m)
 
     print(model.controllable(4))

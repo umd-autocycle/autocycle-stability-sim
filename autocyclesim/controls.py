@@ -36,9 +36,10 @@ class FullStateFeedback(Control):
             if t == 0:
                 start = time.time()
                 A = np.concatenate(
-                    (np.concatenate((np.zeros((2, 2)), np.dot(-1 * self.model.m_inv, (self.model.k0 + self.model.k2 * (v ** 2)))),
-                                    axis=0),
-                     np.concatenate((np.eye(2), np.dot(-1 * self.model.m_inv, self.model.c1 * v)), axis=0)), axis=1)
+                    (np.concatenate(
+                        (np.zeros((2, 2)), np.dot(-1 * self.model.m_inv, (self.model.K0 + self.model.K2 * (v ** 2)))),
+                        axis=0),
+                     np.concatenate((np.eye(2), np.dot(-1 * self.model.m_inv, self.model.C1 * v)), axis=0)), axis=1)
                 B = (np.concatenate((np.zeros((2, 2)), self.model.m_inv), axis=0)[:, 1])[..., None]
                 self.K = control.place(A, B, [self.eval1, self.eval2, self.eval3, self.eval4])
                 end = time.time()
@@ -52,6 +53,7 @@ class FullStateFeedback(Control):
             return ans[0, 0]
 
         return fsf
+
 
 # class FromData(Control):
 #     def __init__(self, data):
@@ -98,11 +100,15 @@ class FSFFirmware(Control):
             K = np.dot(np.linalg.inv(LHS), RHS)
             end = time.time()
             # print(end - start)
-            # print(K)
+            print(K)
             # print(np.dot(K.T, np.array(e).T))
             # print(np.array(e).T)
-            # print(np.array(e).T + np.random.normal(0, 0.01, 4))
-            return -(np.dot(K.T, np.array(e).T))[0]
+            # print(np.array(e).T + np.random.normal(0, 0.1, 4))
+            err = np.array(e).T
+            # err[0] += np.random.normal(0, 0.01)
+            # err[2] += np.random.normal(0, 0.01)
+            # err[3] += np.random.normal(0, 0.01)
+            return -(np.dot(K.T, err))[0]
 
         return fsf
 
@@ -139,8 +145,8 @@ class LQR(Control):
     def get_control(self, goals):
         def lqr(t, e, v):
             A = np.concatenate(
-                (np.concatenate((np.zeros((2, 2)), np.dot(-1 * model.m_inv, (model.k0 + model.k2 * (v ** 2)))), axis=0),
-                 np.concatenate((np.eye(2), np.dot(-1 * model.m_inv, model.c1 * v)), axis=0)), axis=1)
+                (np.concatenate((np.zeros((2, 2)), np.dot(-1 * model.m_inv, (model.K0 + model.K2 * (v ** 2)))), axis=0),
+                 np.concatenate((np.eye(2), np.dot(-1 * model.m_inv, model.C1 * v)), axis=0)), axis=1)
             B = (np.concatenate((np.zeros((2, 2)), model.m_inv), axis=0)[:, 1])[..., None]
             K, S, E = control.lqr(A, B, self.Q, self.R)
             e_transpose = np.array([[e[0]], [e[1]], [e[2]], [e[3]]])
