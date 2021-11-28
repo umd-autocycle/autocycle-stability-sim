@@ -11,7 +11,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 from graphs import generate_figure
 from simulation import simulate
-from bikemodel import MeijaardModel
+from bikemodel import MeijaardModel, DataModel, DataModel0
 from graphs import plot_params
 
 import subprocess
@@ -151,19 +151,10 @@ class GraphPage(tk.Frame):
 
         parampacker1.pack()
 
-        self.model = MeijaardModel(zss=True)
-        self.model.m = np.array([[25.85787748, 3.01165364],
-                                 [3.01165364, 1.26449286]])
-        self.model.c1 = np.array([[0., -5.22756539],
-                                  [-2.8038681, 6.39286875]])
-        self.model.k0 = np.array([[-299.99330839, -39.87777003],
-                                  [-39.87777003, -91.3247599]])
-        self.model.k2 = np.array([[0., 24.31064651],
-                                  [0., 7.08526457]])
-        self.model.m_inv = np.linalg.inv(self.model.m)
+        self.model = DataModel()
 
-        # self.control_model = MeijaardModel(zss=True)
-        self.control_model = self.model
+        self.control_model = DataModel0()
+        # self.control_model = self.model
         self.init_controls()
 
         self.titledict = {
@@ -278,18 +269,9 @@ class GraphPage(tk.Frame):
         self.animateButton.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
 
-        self.model = MeijaardModel(zss=True)
-        self.model.m = np.array([[25.85787748, 3.01165364],
-                                 [3.01165364, 1.26449286]])
-        self.model.c1 = np.array([[0., -5.22756539],
-                                  [-2.8038681, 6.39286875]])
-        self.model.k0 = np.array([[-299.99330839, -39.87777003],
-                                  [-39.87777003, -91.3247599]])
-        self.model.k2 = np.array([[0., 24.31064651],
-                                  [0., 7.08526457]])
-        self.model.m_inv = np.linalg.inv(self.model.m)
-        # self.control_model = MeijaardModel(zss=True)
-        self.control_model = self.model
+        self.model = DataModel()
+        self.control_model = DataModel0()
+        # self.control_model = self.model
         self.init_controls()
         results = simulate(self.model, [phi, delta, phi_del, delta_del], time_span, vel_val,
                            control_method=control, perturbation=perturb, goal=np.radians([0, 0]))

@@ -73,7 +73,7 @@ def error(theta):
         return 1000
 
     cost = 0
-    residuals = np.zeros((1,))
+    residuals = []
     for experiment, i in zip(experiments, range(len(experiments))):
         ki, kf, q_ref, dq_ref, tk, vk, torque_k = experiment
 
@@ -83,7 +83,10 @@ def error(theta):
         diff2 = q[:, 1] - q_ref[:, 1]  # Adding in comparison to delta directly
 
         # cost += (np.sum((diff * 10) ** 2) + np.sum((diff2 * 10) ** 2))
-        residuals = np.concatenate((residuals, diff, diff2), axis=None)
+        residuals.append(diff)
+        residuals.append(diff2)
+
+    residuals = np.concatenate(residuals, axis=None)
 
     # cost = np.average(costs)
 
@@ -101,23 +104,36 @@ k2f = np.array([[0., 21.88145723],
                 [0., -0.86196881]])
 
 # theta0 = matrices2theta(mf, c1f, k0f, k2f)
-theta0 = matrices2theta(model.m, model.c1, model.k0, model.k2)
-bounds = np.array([(0, np.inf),
-                   (0, np.inf),
-                   (0, np.inf),
-                   # (np.NINF, 0),
-                   (-300, 0),
-                   (np.NINF, np.inf),
-                   (np.NINF, np.inf),
-                   (0, np.inf),
-                   (0, np.inf),
-                   (np.NINF, np.inf),
-                   (np.NINF, np.inf),
-                   (np.NINF, np.inf)])
+# theta0 = matrices2theta(model.m, model.c1, model.k0, model.k2)
+theta0 = 3.124, 3.398, -0.877, 0.344, 0.0578, 0.0637, 0.4, -0.6, 0.92, -0.84
+# bounds = np.array([(0, np.inf),
+#                    (0, np.inf),
+#                    (0, np.inf),
+#                    # (np.NINF, 0),
+#                    (-270, 0),
+#                    (np.NINF, np.inf),
+#                    # (np.NINF, np.inf),
+#                    (0, np.inf),
+#                    (0, np.inf),
+#                    (np.NINF, np.inf),
+#                    (np.NINF, np.inf),
+#                    (np.NINF, np.inf)])
+bounds = np.array([(2, 20),
+                   (2, 30),
+                   (-30, 30),
+                   (0.01, 10),
+                   (0.01, 10),
+                   (-10, 10),
+                   (0.2, 1.16),
+                   (-1.2, -0.4),
+                   (0.5, 1.16),
+                   (-2, -0.4),
+                   ])
 
 # min_res = minimize(error, theta0, method='Nelder-Mead',
 #                    options={'disp': True, 'maxiter': 10000, 'adaptive': True, 'bounds': bounds})
-min_res = least_squares(error, theta0, bounds=bounds.T, tr_options={'regularize': True})
+min_res = least_squares(error, theta0, bounds=bounds.T, tr_options={'regularize': True}, loss='soft_l1', verbose=2,
+                        max_nfev=5000, ftol=1e-9, jac='3-point')
 theta_fit = min_res.x
 print(min_res.cost)
 print(model.m)
@@ -133,13 +149,23 @@ print(K2.__repr__())
 
 
 def plot_results():
+    ki, kf, q_ref, dq_ref, tk, vk, torque_k = experiments[-1]
+    d = 3
+    ki += d
+    q_ref = q_ref[d:, :]
+    dq_ref = dq_ref[d:, :]
+    tk = tk[d:]
+    vk = vk[d:]
+    torque_k = torque_k[d:]
+    experiment_test = ki, kf, q_ref, dq_ref, tk, vk, torque_k
+    experiments.append(experiment_test)
     m = len(experiments)
     f, plts = plt.subplots(2, m)
 
     for experiment, i in zip(experiments, range(m)):
         ki, kf, q_ref, dq_ref, tk, vk, torque_k = experiment
-        # q_naive, dq_naive = simulate(mf, c1f, k0f, k2f, q_ref, dq_ref, kf - ki, tk, vk, torque_k)
-        q_naive, dq_naive = simulate(model.m, model.c1, model.k0, model.k2, q_ref, dq_ref, kf - ki, tk, vk, torque_k)
+        q_naive, dq_naive = simulate(mf, c1f, k0f, k2f, q_ref, dq_ref, kf - ki, tk, vk, torque_k)
+        # q_naive, dq_naive = simulate(model.m, model.c1, model.k0, model.k2, q_ref, dq_ref, kf - ki, tk, vk, torque_k)
         q_fit, dq_fit = simulate(M, C1, K0, K2, q_ref, dq_ref, kf - ki, tk, vk, torque_k)
 
         # Plot results
@@ -148,9 +174,9 @@ def plot_results():
         plts[0, i].grid()
         plts[0, i].plot(tk, q_ref[:, 0], label='Phi (rad)')
         plts[0, i].plot(tk, q_ref[:, 1], label='Del (rad)')
-        plts[0, i].plot(tk, torque_k, label='Torque (Nm)')
-        plts[0, i].plot(tk, q_naive[:, 0], label='Phi Naively Predicted (rad)')
-        plts[0, i].plot(tk, q_naive[:, 1], label='Del Naively Predicted (rad)')
+        # plts[0, i].plot(tk, torque_k, label='Torque (Nm)')
+        # plts[0, i].plot(tk, q_naive[:, 0], label='Phi Naively Predicted (rad)')
+        # plts[0, i].plot(tk, q_naive[:, 1], label='Del Naively Predicted (rad)')
         plts[0, i].plot(tk, q_fit[:, 0], label='Phi Fit Predicted (rad)')
         plts[0, i].plot(tk, q_fit[:, 1], label='Del Fit Predicted (rad)')
         # plts[0, i].xlabel('Time (s)')
@@ -164,8 +190,8 @@ def plot_results():
         plts[1, i].plot(tk, dq_ref[:, 0], label='dPhi (rad/s)')
         plts[1, i].plot(tk, dq_ref[:, 1], label='dDel (rad/s)')
         plts[1, i].plot(tk, torque_k, label='Torque (Nm)')
-        plts[1, i].plot(tk, dq_naive[:, 0], label='dPhi Naively Predicted (rad/s)')
-        plts[1, i].plot(tk, dq_naive[:, 1], label='dDel Naively Predicted (rad/s)')
+        # plts[1, i].plot(tk, dq_naive[:, 0], label='dPhi Naively Predicted (rad/s)')
+        # plts[1, i].plot(tk, dq_naive[:, 1], label='dDel Naively Predicted (rad/s)')
         plts[1, i].plot(tk, dq_fit[:, 0], label='dPhi Fit Predicted (rad/s)')
         plts[1, i].plot(tk, dq_fit[:, 1], label='dDel Fit Predicted (rad/s)')
         # plts[1, i].xlabel('Time (s)')

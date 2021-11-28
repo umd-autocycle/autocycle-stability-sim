@@ -48,6 +48,7 @@ class MeijaardModel(BikeModel):
 
     # Combine ZSS and Rear Frame MOI, COM, and Mass
     m_rf = m_arf + m_zss
+    print(m_rf)
     com_rf = (com_arf * m_arf + com_zss * m_zss) / m_rf
     d_zss = com_zss - com_rf
     d_arf = com_arf - com_rf
@@ -82,9 +83,11 @@ class MeijaardModel(BikeModel):
             ])
 
         m_t = self.m_rw + self.m_rf + self.m_ff + self.m_fw
+        print(m_t)
         x_t = (self.x_rf * self.m_rf + self.x_ff * self.m_ff + self.w * self.m_fw) / m_t
         z_t = (-self.r_rw * self.m_rw + self.z_rf * self.m_rf
                + self.z_ff * self.m_ff - self.r_fw * self.m_fw) / m_t
+        print(z_t)
 
         t_xx = self.A[0] + self.B[0, 0] + self.C[0, 0] + self.D[0] \
                + self.m_rw * (self.r_rw ** 2) + self.m_rf * (self.z_rf ** 2) \
@@ -218,8 +221,41 @@ class MeijaardModel(BikeModel):
         return np.linalg.matrix_rank(Ct) == n
 
 
+class DataModel0(MeijaardModel):
+    def __init__(self):
+        super().__init__(True)
+
+        # Multiple datasets, least squares, fitting MOI and COM parameters
+        self.m = np.array([[26.67504339, 1.21856943],
+                           [1.21856943, 0.59438128]])
+        self.c1 = np.array([[0., 4.97370516],
+                            [-0.98015773, 2.43085255]])
+        self.k0 = np.array([[-210.6481775, 1.14387605],
+                            [1.14387605, 3.2817143]])
+        self.k2 = np.array([[0., 21.88145723],
+                            [0., -0.86196881]])
+        self.m_inv = np.linalg.inv(self.m)
+
+
+class DataModel(MeijaardModel):
+    def __init__(self):
+        super().__init__(True)
+
+        # Multiple datasets, least squares, fitting MOI and COM parameters
+        self.m = np.array([[20.05942938, 1.81962939],
+                           [1.81962939, 1.06290221]])
+        self.c1 = np.array([[0., -9.49710189],
+                            [-1.0301525, 3.83043837]])
+        self.k0 = np.array([[-216.35389011, -22.02273988],
+                            [-22.02273988, -5.48683444]])
+        self.k2 = np.array([[0., 20.02065366],
+                            [0., 2.06443353]])
+        self.m_inv = np.linalg.inv(self.m)
+
+
 if __name__ == '__main__':
-    model = MeijaardModel(zss=True)
+    model = DataModel()
+    # Fitted with one dataset, direct to matrices, minimize
     # model.m = np.array([[26.67504339, 1.21856943],
     #                     [1.21856943, 0.59438128]])
     # model.c1 = np.array([[0., 4.97370516],
@@ -228,15 +264,16 @@ if __name__ == '__main__':
     #                      [1.14387605, 3.2817143]])
     # model.k2 = np.array([[0., 21.88145723],
     #                      [0., -0.86196881]])
-    model.m = np.array([[25.85787748, 3.01165364],
-                        [3.01165364, 1.26449286]])
-    model.c1 = np.array([[0., -5.22756539],
-                         [-2.8038681, 6.39286875]])
-    model.k0 = np.array([[-299.99330839, -39.87777003],
-                         [-39.87777003, -91.3247599]])
-    model.k2 = np.array([[0., 24.31064651],
-                         [0., 7.08526457]])
-    model.m_inv = np.linalg.inv(model.m)
+
+    # Fitted with multiple datasets, direct to matrices, least squares
+    # model.m = np.array([[25.85787748, 3.01165364],
+    #                     [3.01165364, 1.26449286]])
+    # model.c1 = np.array([[0., -5.22756539],
+    #                      [-2.8038681, 6.39286875]])
+    # model.k0 = np.array([[-299.99330839, -39.87777003],
+    #                      [-39.87777003, -91.3247599]])
+    # model.k2 = np.array([[0., 24.31064651],
+    #                      [0., 7.08526457]])
 
     print(model.controllable(4))
 
