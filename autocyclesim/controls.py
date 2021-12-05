@@ -100,6 +100,7 @@ class FSFFirmware(Control):
             K = np.dot(np.linalg.inv(LHS), RHS)
             end = time.time()
             # print(end - start)
+            # K[3,0] = 0
             print(K)
             # print(np.dot(K.T, np.array(e).T))
             # print(np.array(e).T)

@@ -253,8 +253,23 @@ class DataModel(MeijaardModel):
         self.m_inv = np.linalg.inv(self.m)
 
 
+class DataModel1(MeijaardModel):
+    def __init__(self):
+        super().__init__(True)
+
+        self.m = np.array([[81.69645999,  4.66984084],
+       [ 4.66984084,  0.46524598]])
+        self.c1 = np.array([[ 0.        , 37.65918996],
+       [-1.0301525 ,  3.30816916]])
+        self.k0 = np.array([[-493.14869879,  -37.20852922],
+       [ -37.20852922,   -9.27028338]])
+        self.k2 = np.array([[ 0.        , 43.57741163],
+       [ 0.        ,  3.35682759]])
+        self.m_inv = np.linalg.inv(self.m)
+
+
 if __name__ == '__main__':
-    model = DataModel()
+    model = DataModel1()
     # Fitted with one dataset, direct to matrices, minimize
     # model.m = np.array([[26.67504339, 1.21856943],
     #                     [1.21856943, 0.59438128]])
@@ -286,6 +301,10 @@ if __name__ == '__main__':
         model.linearized_1st_order(v, [None, None])
         eig_val, eig_vec = np.linalg.eig(model.Amatrix)
         eig_val = sorted(eig_val, key=np.real)
+        if abs(v - 4.7) < .02:
+            print('At %.2f:' % v)
+            print(eig_val)
+            print(model.dynamics_matrix(v, True))
 
         eek.append(eig_val)
 

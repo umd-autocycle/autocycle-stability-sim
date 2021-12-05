@@ -80,11 +80,11 @@ def error(theta):
         q, dq = simulate(m, c1, k0, k2, q_ref, dq_ref, kf - ki, tk, vk, torque_k)
 
         diff = dq - dq_ref
-        diff2 = q[:, 1] - q_ref[:, 1]  # Adding in comparison to delta directly
+        diff2 = q - q_ref  # Adding in comparison to delta directly [:, 1]
 
         # cost += (np.sum((diff * 10) ** 2) + np.sum((diff2 * 10) ** 2))
-        residuals.append(diff)
-        residuals.append(diff2)
+        # print(np.concatenate((diff, diff2), axis=1))
+        residuals.append(np.concatenate((diff2, diff), axis=0))
 
     residuals = np.concatenate(residuals, axis=None)
 
@@ -118,22 +118,22 @@ theta0 = 3.124, 3.398, -0.877, 0.344, 0.0578, 0.0637, 0.4, -0.6, 0.92, -0.84
 #                    (np.NINF, np.inf),
 #                    (np.NINF, np.inf),
 #                    (np.NINF, np.inf)])
-bounds = np.array([(2, 20),
-                   (2, 30),
+bounds = np.array([(2, 8),
+                   (2, 8),
                    (-30, 30),
                    (0.01, 10),
                    (0.01, 10),
                    (-10, 10),
                    (0.2, 1.16),
-                   (-1.2, -0.4),
+                   (-1.2, -0.3),
                    (0.5, 1.16),
-                   (-2, -0.4),
+                   (-2, -0.2),
                    ])
 
 # min_res = minimize(error, theta0, method='Nelder-Mead',
 #                    options={'disp': True, 'maxiter': 10000, 'adaptive': True, 'bounds': bounds})
 min_res = least_squares(error, theta0, bounds=bounds.T, tr_options={'regularize': True}, loss='soft_l1', verbose=2,
-                        max_nfev=5000, ftol=1e-9, jac='3-point')
+                        max_nfev=5000, ftol=1e-6, jac='3-point')
 theta_fit = min_res.x
 print(min_res.cost)
 print(model.m)
