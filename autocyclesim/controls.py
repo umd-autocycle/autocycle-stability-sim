@@ -105,11 +105,18 @@ class FSFFirmware(Control):
             # print(np.dot(K.T, np.array(e).T))
             # print(np.array(e).T)
             # print(np.array(e).T + np.random.normal(0, 0.1, 4))
-            err = np.array(e).T
+            stiff = self.model.k0 + self.model.k2 * v ** 2
+            goals[0] = -stiff[0, 1] / stiff[0, 0] * goals[1]
+            ff = stiff[1,0]*goals[0] + stiff[1,1]*goals[1]
+            ref = np.concatenate([goals, np.array([0, 0])])
+            # ref.shape = (1, 4)
+            err = np.array(e).T - ref
+            print(ref)
+            print(err)
             # err[0] += np.random.normal(0, 0.01)
             # err[2] += np.random.normal(0, 0.01)
             # err[3] += np.random.normal(0, 0.01)
-            return -(np.dot(K.T, err))[0]
+            return -(np.dot(K.T, err))[0] + ff
 
         return fsf
 

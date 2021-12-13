@@ -151,7 +151,7 @@ class GraphPage(tk.Frame):
 
         parampacker1.pack()
 
-        self.model = DataModel1()
+        self.model = DataModel0()
 
         # self.control_model = DataModel()
         self.control_model = self.model
@@ -269,12 +269,12 @@ class GraphPage(tk.Frame):
         self.animateButton.pack(side=tk.BOTTOM)
         self.button3.pack(side=tk.BOTTOM)
 
-        self.model = DataModel1()
+        self.model = DataModel0()
         # self.control_model = DataModel0()
         self.control_model = self.model
         self.init_controls()
         results = simulate(self.model, [phi, delta, phi_del, delta_del], time_span, vel_val,
-                           control_method=control, perturbation=perturb, goal=np.radians([0, 0]))
+                           control_method=control, perturbation=perturb, goal=np.radians([0, 5]))
 
         stphi = float(metrics.settling_time(results['t'], np.radians(results['phi']), 0))
         stdelta = float(metrics.settling_time(results['t'], results['delta'], 0))
