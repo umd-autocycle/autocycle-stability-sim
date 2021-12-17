@@ -2,6 +2,35 @@ import numpy as np
 from math import sin, cos, pi
 
 
+def d4simulate(A, B, C, D, q_ref, dq_ref, n, tk, vk, torque_k):
+    x = np.zeros((4, n))
+    y = np.zeros((4, n))
+    x[:, 0] = np.array([q_ref[0, 0], q_ref[0, 1], dq_ref[0, 0], dq_ref[0, 1]]).T
+    y[:, 0] = C @ x[:, 0]
+
+    for k in range(1, n):
+        dt = tk[k] - tk[k - 1]
+        x[:, k] = A @ x[:, k - 1] + B * torque_k[k - 1]
+        y[:, k] = C @ x[:, k] + D * torque_k[k]
+    return x, y
+
+
+# Simulate
+def simulate(m, c1, k0, k2, q_ref, dq_ref, n, tk, vk, torque_k):
+    dq = np.zeros((n, 2))
+    q = np.zeros((n, 2))
+    q[0, 0], q[0, 1] = q_ref[0, 0], q_ref[0, 1]
+    dq[0, 0], dq[0, 1] = dq_ref[0, 0], dq_ref[0, 1]
+    m_inv = np.linalg.inv(m)
+
+    for k in range(1, n):
+        dt = tk[k] - tk[k - 1]
+        g = np.array([0, torque_k[k - 1]])
+        dq[k] = dq[k - 1] + dt * m_inv @ (g - vk[k - 1] * c1 @ dq[k - 1] - (k0 + vk[k - 1] ** 2 * k2) @ q[k - 1])
+        q[k] = q[k - 1] + dt * dq[k - 1]
+    return q, dq
+
+
 def matrices2theta(M, C1, K0, K2):
     return np.array(
         [M[0, 0], M[0, 1], M[1, 1], K0[0, 0], K0[0, 1], K2[0, 1], K2[1, 1], C1[0, 1], C1[1, 0], C1[1, 1]])

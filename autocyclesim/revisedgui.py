@@ -186,7 +186,7 @@ class GraphPage(tk.Frame):
             4: PIDPhiInterpolated(max_torque=20),
             5: Lyapunov(E3=.1),
             6: FuzzyLyapunov(np=5.3497, z=2.5390, npd=0.0861, zd=.4162, E1=1.5743, E3=.0064),
-            7: FSFFirmware(self.control_model, 8, -3, -3.5, -4, -10),#-6, -7, -8, -9),#-5, -4, -3, -2.5)
+            7: FSFFirmware(self.control_model, 8, -6, -7, -8, -9),#-5, -4, -3, -2.5)
             # 7: FullStateFeedback(self.control_model, -2, -3, -4, -5),
             8: LQR(k_phi=10, k_delta=1, k_dphi=3, k_ddelta=2.5, k_torque=1),
             9: PIDDelta(k_p=7.47147503, k_i=0.51375069, k_d=-1.236068, max_torque=40)
